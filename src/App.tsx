@@ -1,10 +1,11 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowDown, ArrowRight, BadgeCheck, Boxes, ChevronDown,
   CircleDollarSign, FileSpreadsheet, Headphones, HeartHandshake, LockKeyhole,
   MessageSquareQuote, PackageCheck, Search, ShieldCheck, ShoppingCart,
   Smartphone, Store, Users, Zap, KeyRound, MapPin, UserRound,
   Package, CreditCard, CarFront, Truck, Mail, MessageCircle, ClipboardCheck,
+  Menu, X,
 } from 'lucide-react';
 import { siteConfig, trackEvent } from './config';
 
@@ -83,8 +84,22 @@ function PlatformPill({ platform, soon = false }: { platform: 'android' | 'ios';
   </div>;
 }
 
+function Reveal({ children, delay = 0, as: Tag = 'div', className = '' }: { children: ReactNode; delay?: number; as?: any; className?: string }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === 'undefined') { setInView(true); return; }
+    const io = new IntersectionObserver(([entry]) => { if (entry.isIntersecting) { setInView(true); io.unobserve(el); } }, { threshold: 0.18, rootMargin: '0px 0px -60px 0px' });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return <Tag ref={ref} className={`reveal${inView ? ' is-in' : ''}${className ? ' ' + className : ''}`} style={{ transitionDelay: `${delay}ms` }}>{children}</Tag>;
+}
+
 function FeatureGrid({ items }: { items: readonly Feature[] }) {
-  return <div className="feature-grid">{items.map((item, index) => <article className={`feature-card accent-${index + 1}`} key={item.title}><div className="icon-box">{item.icon}</div><h3>{item.title}</h3><p>{item.text}</p></article>)}</div>;
+  return <div className="feature-grid">{items.map((item, index) => <Reveal as="article" className={`feature-card accent-${index + 1}`} key={item.title} delay={index * 70}><div className="icon-box">{item.icon}</div><h3>{item.title}</h3><p>{item.text}</p></Reveal>)}</div>;
 }
 
 function ExperienceTabs() {
@@ -99,7 +114,7 @@ function ExperienceTabs() {
 
   return <section className={`experience-section experience-${mode}`} id="experiencias">
     <div className="section experience-shell">
-      <div className="section-heading centered"><span className="eyebrow"><Users /> Una plataforma, dos experiencias</span><h2>Todo lo que necesitas, según tu objetivo</h2><p>Cambia de vista y descubre cómo RepuesTop trabaja para ti.</p></div>
+      <Reveal as="div" className="section-heading centered"><span className="eyebrow"><Users /> Una plataforma, dos experiencias</span><h2>Todo lo que necesitas, según tu objetivo</h2><p>Cambia de vista y descubre cómo RepuesTop trabaja para ti.</p></Reveal>
       <div className="experience-tabs" role="tablist" aria-label="Elige tu experiencia">
         {(Object.keys(experiences) as ExperienceMode[]).map(key => (
           <button 
@@ -124,7 +139,7 @@ function ExperienceTabs() {
         aria-labelledby={`experience-tab-${mode}`}
         key={mode}
       >
-        <div className="experience-content"><span className="eyebrow">{experience.eyebrow}</span><h2>{experience.title}</h2><p>{experience.text}</p><div className="experience-stats">{experience.stats.map(([value, label]) => <div key={value}><strong>{value}</strong><span>{label}</span></div>)}</div><button className="button experience-cta" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : 'Ver todo lo que ofrece'} <ChevronDown /></button></div>
+        <div className="experience-content"><span className="eyebrow">{experience.eyebrow}</span><h2>{experience.title}</h2><p>{experience.text}</p><div className="experience-stats">{experience.stats.map(([value, label], i) => <Reveal as="div" key={value} delay={i * 70}><strong>{value}</strong><span>{label}</span></Reveal>)}</div><button className="button experience-cta" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : 'Ver todo lo que ofrece'} <ChevronDown /></button></div>
         <div className="experience-media"><div className="media-glow" /><div className="image-panel"><img src={experience.image} alt={experience.title} /></div><span className="floating-chip chip-top"><Zap /> Experiencia simple y rápida</span><span className="floating-chip chip-bottom"><BadgeCheck /> Información más clara</span></div>
       </div>
       <div className={`experience-features expandable-content ${expanded ? 'is-expanded' : ''}`} aria-hidden={!expanded}><FeatureGrid items={experience.features} /></div>
@@ -288,7 +303,7 @@ function HelpExperience() {
           const isOpen = openFaq === index;
           const answerId = `faq-answer-${category}-${index}`;
           return (
-            <article className={isOpen ? 'is-open' : ''} key={item.question}>
+            <Reveal as="article" className={isOpen ? 'is-open' : ''} key={item.question} delay={index * 50}>
               <button 
                 type="button" 
                 aria-expanded={isOpen}
@@ -307,7 +322,7 @@ function HelpExperience() {
               >
                 <p>{item.answer}</p>
               </div>
-            </article>
+            </Reveal>
           );
         })}
       </div>
@@ -332,8 +347,84 @@ function PrivacyExperience() {
       <div className="privacy-priority"><ShieldCheck /> Tu confianza es importante. Mejoramos nuestras medidas de seguridad a medida que evoluciona el servicio.</div>
     </div>
     <div className="privacy-control-panel">
-      <div className="privacy-settings"><div className="privacy-panel-title"><span><ShieldCheck /></span><div><h3>Mi privacidad</h3><p>Consulta qué información puede formar parte de tu experiencia.</p></div></div><div className="privacy-item-list">{privacyItems.map((item, index) => <article className={openPrivacy === index ? 'is-expanded' : ''} key={item.title}><button type="button" aria-expanded={openPrivacy === index} onClick={() => setOpenPrivacy(openPrivacy === index ? null : index)}><span>{item.icon}</span><div><strong>{item.title}</strong><small>{item.text}</small></div><ChevronDown /></button><div className="privacy-item-detail"><p>{item.detail}</p></div></article>)}</div></div>
+      <div className="privacy-settings"><div className="privacy-panel-title"><span><ShieldCheck /></span><div><h3>Mi privacidad</h3><p>Consulta qué información puede formar parte de tu experiencia.</p></div></div><div className="privacy-item-list">{privacyItems.map((item, index) => <Reveal as="article" className={openPrivacy === index ? 'is-expanded' : ''} key={item.title} delay={index * 50}><button type="button" aria-expanded={openPrivacy === index} onClick={() => setOpenPrivacy(openPrivacy === index ? null : index)}><span>{item.icon}</span><div><strong>{item.title}</strong><small>{item.text}</small></div><ChevronDown /></button><div className="privacy-item-detail"><p>{item.detail}</p></div></Reveal>)}</div></div>
       <aside className="privacy-shield-card"><div className="shield-visual"><span className="shield-orbit orbit-one" /><span className="shield-orbit orbit-two" /><ShieldCheck /></div><div className="shield-message"><LockKeyhole /><div><strong>Tu información merece cuidado</strong><p>Aplicamos medidas razonables para limitar accesos indebidos y tratar tus datos de forma responsable.</p></div></div><span className="privacy-status"><BadgeCheck /> Seguridad en mejora continua</span></aside>
+    </div>
+  </div>;
+}
+
+function FlowExperience() {
+  const [audience, setAudience] = useState<'buyer' | 'seller'>('buyer');
+  const flows = {
+    buyer: {
+      label: 'Comprador', icon: <ShoppingCart />,
+      summary: 'Encuentra el repuesto correcto sin llamar tienda por tienda ni adivinar si sirve para tu vehículo.',
+      steps: [
+        { icon: <Search />, title: 'Identifica tu vehículo', text: 'Busca por patente o ingresa marca, modelo, versión y año.' },
+        { icon: <BadgeCheck />, title: 'Compara alternativas', text: 'Revisa opciones de tiendas verificadas con información clara.' },
+        { icon: <MessageSquareQuote />, title: 'Compra o cotiza', text: 'Avanza directo o solicita una cotización si el precio no es público.' },
+        { icon: <PackageCheck />, title: 'Sigue tu pedido', text: 'Consulta el estado de tu compra hasta que llegue.' },
+      ],
+      benefits: [['Menos errores', 'Compatibilidad más clara antes de pagar'], ['Menos tiempo', 'Todo desde una sola búsqueda'], ['Más confianza', 'Solo tiendas verificadas']] as Array<[string, string]>,
+    },
+    seller: {
+      label: 'Vendedor', icon: <Store />,
+      summary: 'Convierte tu inventario en ventas sin depender solo del boca a boca o de planillas sueltas.',
+      steps: [
+        { icon: <FileSpreadsheet />, title: 'Publica tu inventario', text: 'Carga manual o masiva de productos vía Excel o CSV.' },
+        { icon: <Users />, title: 'Recibe interesados', text: 'Personas y talleres que buscan justo lo que tienes.' },
+        { icon: <CircleDollarSign />, title: 'Responde y vende', text: 'Publica precios o responde cotizaciones privadas.' },
+        { icon: <Boxes />, title: 'Gestiona tu operación', text: 'Stock, pedidos y comunicación en un solo lugar.' },
+      ],
+      benefits: [['Más alcance', 'Nuevos clientes buscando tu producto'], ['Control total', 'Tú decides precios y condiciones'], ['Todo en orden', 'Menos planillas, más claridad']] as Array<[string, string]>,
+    },
+  } as const;
+  const flow = flows[audience];
+  return <div className="flow-experience">
+    <div className="flow-intro-column">
+      <div className="flow-title-row"><span className="flow-title-icon"><Zap /></span><div><span className="eyebrow">Cómo funciona</span><h2>El repuesto correcto. La venta correcta.</h2><p>RepuesTop conecta dos necesidades del mismo mercado: encontrar el repuesto exacto y darle salida al inventario que ya existe.</p></div></div>
+      <div className="flow-problem-card"><span className="flow-problem-icon"><Search /></span><div><strong>El problema que resolvemos</strong><p>Hoy, buscar un repuesto significa llamar tienda por tienda sin saber si hay stock, si el precio es justo o si el vendedor es confiable. Y muchas tiendas de repuestos no tienen dónde mostrar lo que venden.</p></div></div>
+      <div className="flow-visual"><img src="/assets/como-funciona.jpg" alt="Cómo funciona RepuesTop" /></div>
+    </div>
+    <div className="flow-content-column">
+      <div className="flow-audience-tabs" role="tablist" aria-label="Cómo funciona para cada perfil">
+        {(Object.keys(flows) as Array<'buyer' | 'seller'>).map(key => <button type="button" role="tab" aria-selected={audience === key} className={audience === key ? 'is-active' : ''} key={key} onClick={() => setAudience(key)}>{flows[key].icon}<span>{flows[key].label}</span></button>)}
+      </div>
+      <p className="flow-summary">{flow.summary}</p>
+      <div className="flow-steps-grid">{flow.steps.map((step, i) => <Reveal as="article" key={step.title} delay={i * 60}><b>{i + 1}</b><span className="flow-step-icon">{step.icon}</span><div><h3>{step.title}</h3><p>{step.text}</p></div></Reveal>)}</div>
+      <div className="flow-benefit-row">{flow.benefits.map(([title, text]) => <span key={title}><strong>{title}</strong><small>{text}</small></span>)}</div>
+    </div>
+  </div>;
+}
+
+function AboutExperience() {
+  const problems = [
+    { icon: <Boxes />, title: 'Inventario disperso y poco visible', text: 'Muchas tiendas de repuestos no tienen presencia digital ni forma de mostrar lo que realmente tienen disponible.' },
+    { icon: <Search />, title: 'Encontrar el repuesto correcto es difícil', text: 'Compatibilidad, marcas, versiones y años generan errores de compra y pérdida de tiempo para personas y talleres.' },
+    { icon: <MessageSquareQuote />, title: 'Cotizar y negociar toma demasiado tiempo', text: 'Llamadas, mensajes y visitas presenciales que podrían resolverse desde una sola plataforma.' },
+  ];
+  const approach = [
+    { icon: <Search />, title: 'Claridad', text: 'Información técnica y de compatibilidad fácil de entender, sin letra chica.' },
+    { icon: <ShieldCheck />, title: 'Confianza', text: 'Tiendas verificadas y reglas claras para comprador y vendedor.' },
+    { icon: <Users />, title: 'Conexión', text: 'Acercamos inventario real a quienes realmente lo necesitan.' },
+    { icon: <Smartphone />, title: 'Simplicidad', text: 'Una experiencia pensada para resolver en minutos, no en días.' },
+  ];
+  return <div className="about-experience">
+    <div className="about-intro-column">
+      <div className="about-title-row"><span className="about-title-icon"><HeartHandshake /></span><div><span className="eyebrow">Nosotros</span><h2>Ingenieros resolviendo problemas reales del rubro automotriz</h2><p>Somos un equipo de ingenieros que construye soluciones tecnológicas para ordenar y modernizar el mercado de repuestos y servicios mecánicos en Chile.</p></div></div>
+      <div className="about-photo-panel"><img src="/assets/nosotros.jpg" alt="Equipo RepuesTop conectando personas y tiendas" /></div>
+      <div className="about-mission-card"><span className="about-mission-icon"><ShieldCheck /></span><div><strong>Nuestra misión</strong><p>Usar ingeniería y tecnología para que comprar y vender repuestos sea rápido, confiable y transparente para todos.</p></div></div>
+      <div className="chile-strip"><MapPin /><span><strong>Creado en Chile</strong><small>Para el mercado automotriz local</small></span><i>CL</i></div>
+    </div>
+    <div className="about-content-column">
+      <div className="about-section-block">
+        <h3>El problema que buscamos resolver</h3>
+        <div className="about-problem-list">{problems.map((item, i) => <Reveal as="article" key={item.title} delay={i * 60}><span>{item.icon}</span><div><strong>{item.title}</strong><p>{item.text}</p></div></Reveal>)}</div>
+      </div>
+      <div className="about-section-block">
+        <h3>Cómo lo resolvemos</h3>
+        <div className="about-values-grid">{approach.map((item, i) => <Reveal as="article" key={item.title} delay={i * 60}><span>{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p></Reveal>)}</div>
+      </div>
     </div>
   </div>;
 }
@@ -341,7 +432,7 @@ function PrivacyExperience() {
 function InfoHub({ mode, setMode }: { mode: InfoMode; setMode: (mode: InfoMode) => void }) {
   const option = infoOptions[mode];
   return <section className={`info-hub hub-${option.tone}`} id="como-funciona"><div className="section">
-    <div className="matrix-heading centered"><span className="eyebrow"><MapPin /> Conoce RepuesTop</span><h2>Todo lo importante, a un toque</h2><p>Selecciona una categoría para explorar toda su información.</p></div>
+    <Reveal as="div" className="matrix-heading centered"><span className="eyebrow"><MapPin /> Conoce RepuesTop</span><h2>Todo lo importante, a un toque</h2><p>Selecciona una categoría para explorar toda su información.</p></Reveal>
     <div className="info-icon-tabs" role="tablist" aria-label="Información de RepuesTop">
       {(Object.keys(infoOptions) as InfoMode[]).map(key => (
         <button 
@@ -367,8 +458,8 @@ function InfoHub({ mode, setMode }: { mode: InfoMode; setMode: (mode: InfoMode) 
       aria-labelledby={`info-tab-${mode}`}
       key={mode}
     >
-      {mode === 'flow' && <><div className="detail-heading"><span className="detail-icon"><Zap /></span><div><span className="eyebrow">Cómo funciona</span><h2>Dos recorridos que se encuentran</h2><p>Compradores y tiendas avanzan por un proceso claro, desde la necesidad inicial hasta el seguimiento del pedido.</p></div></div><div className="journey-grid"><div className="journey-visual"><img src="/assets/como-funciona.jpg" alt="Cómo funciona RepuesTop" /></div><div className="journey-steps">{[['01', 'Identifica', 'Busca por patente o publica tu inventario.'], ['02', 'Conecta', 'Encuentra alternativas o recibe clientes interesados.'], ['03', 'Decide', 'Compra, cotiza o responde con tus condiciones.'], ['04', 'Avanza', 'Sigue el pedido y mantén todo comunicado.']].map(([number, title, text]) => <article key={number}><b>{number}</b><div><h3>{title}</h3><p>{text}</p></div></article>)}</div></div></>}
-      {mode === 'about' && <><div className="detail-heading"><span className="detail-icon"><HeartHandshake /></span><div><span className="eyebrow">Nosotros</span><h2>Tecnología con propósito automotriz</h2><p>Una solución creada en Chile para ordenar el mercado de repuestos y construir mejores conexiones.</p></div></div><div className="about-grid"><div><img src="/assets/nosotros.jpg" alt="Personas conectando mediante RepuesTop" /></div><div><h3>Más claridad. Más confianza. Mejores conexiones.</h3><p>Acercamos inventario e información para que cada decisión tenga un mejor punto de partida.</p><div className="value-grid"><span><Search /> Claridad</span><span><ShieldCheck /> Confianza</span><span><Users /> Conexión</span><span><Smartphone /> Simplicidad</span></div><div className="chile-strip"><MapPin /><span><strong>Creado en Chile</strong><small>Para el mercado automotriz local</small></span><i>CL</i></div></div></div></>}
+      {mode === 'flow' && <FlowExperience />}
+      {mode === 'about' && <AboutExperience />}
       {mode === 'help' && <HelpExperience />}
       {mode === 'privacy' && <PrivacyExperience />}
     </div>
@@ -391,11 +482,11 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
 
   return <section className="final-stage" id="descargar">
     <div className="section final-stage-shell">
-      <div className="final-stage-heading">
+      <Reveal as="div" className="final-stage-heading">
         <span className="eyebrow"><Smartphone /> La experiencia continúa en tu teléfono</span>
         <h2>¿Listo para usar RepuesTop?</h2>
         <p>Elige cómo quieres usar la plataforma y empieza con el flujo que más te convenga.</p>
-      </div>
+      </Reveal>
 
       <div className="final-stage-grid">
         <article className="final-route-card route-buyer">
@@ -405,11 +496,11 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
             <p>Busca por patente o manual, compara opciones y compra con seguimiento.</p>
           </div>
           <div className="route-mini-grid">
-            {buyerHighlights.map(item => <span key={item.label}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></span>)}
+            {buyerHighlights.map((item, i) => <Reveal as="span" key={item.label} delay={i * 60}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></Reveal>)}
           </div>
           <div className="route-actions">
             <a className="button button-white" href="#experiencias">Buscar repuestos <ArrowRight /></a>
-            <a className="button button-outline route-dark" href={`mailto:${siteConfig.supportEmail}?subject=Avisarme%20del%20lanzamiento`} onClick={() => trackEvent('launch_interest')}>
+            <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}?subject=Avisarme%20del%20lanzamiento`} onClick={() => trackEvent('launch_interest')}>
               <Smartphone /> Avísame del lanzamiento
             </a>
           </div>
@@ -419,7 +510,6 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           <div className="final-device device-a"><img src="/assets/comprador-como-funciona.png" alt="" /></div>
           <div className="final-device device-b"><img src="/assets/vendedor-como-funciona.png" alt="" /></div>
           <span className="floating-chip chip-search"><Search /> Busca</span>
-          <span className="floating-chip chip-cart"><ShoppingCart /> Compra</span>
           <span className="floating-chip chip-store"><Store /> Vende</span>
         </div>
 
@@ -430,20 +520,20 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
             <p>Publica productos, recibe cotizaciones y gestiona tu operación desde un solo lugar.</p>
           </div>
           <div className="route-mini-grid">
-            {sellerHighlights.map(item => <span key={item.label}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></span>)}
+            {sellerHighlights.map((item, i) => <Reveal as="span" key={item.label} delay={i * 60}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></Reveal>)}
           </div>
           <div className="route-actions">
             <a className="button button-white" href="#como-funciona">Quiero vender en RepuesTop <ArrowRight /></a>
-            <a className="button button-outline route-dark" href={`mailto:${siteConfig.supportEmail}`}>Hablar con el equipo <MessageCircle /></a>
+            <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}`}><MessageCircle /> Hablar con el equipo</a>
           </div>
         </article>
       </div>
 
       <div className="final-benefits">
-        <span><ShieldCheck /><div><strong>Tiendas verificadas</strong><small>Solo tiendas reales y validadas.</small></div></span>
-        <span><PackageCheck /><div><strong>Compatibilidad clara</strong><small>Encuentra lo que realmente sirve.</small></div></span>
-        <span><Headphones /><div><strong>Soporte y mediación</strong><small>Te acompañamos antes, durante y después.</small></div></span>
-        <span><LockKeyhole /><div><strong>Pagos y pedidos protegidos</strong><small>Más orden en cada compra.</small></div></span>
+        <Reveal as="span"><ShieldCheck /><div><strong>Tiendas verificadas</strong><small>Solo tiendas reales y validadas.</small></div></Reveal>
+        <Reveal as="span" delay={70}><PackageCheck /><div><strong>Compatibilidad clara</strong><small>Encuentra lo que realmente sirve.</small></div></Reveal>
+        <Reveal as="span" delay={140}><Headphones /><div><strong>Soporte y mediación</strong><small>Te acompañamos antes, durante y después.</small></div></Reveal>
+        <Reveal as="span" delay={210}><LockKeyhole /><div><strong>Pagos y pedidos protegidos</strong><small>Más orden en cada compra.</small></div></Reveal>
       </div>
 
       <footer className="final-footer">
@@ -490,19 +580,55 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
   </section>;
 }
 
+function HeroLiveBadge() {
+  const items = [
+    { icon: <Search />, text: 'Buscas por patente' },
+    { icon: <BadgeCheck />, text: 'Comparas tiendas verificadas' },
+    { icon: <ShoppingCart />, text: 'Compras o cotizas' },
+    { icon: <PackageCheck />, text: 'Sigues tu pedido' },
+  ];
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setI(v => (v + 1) % items.length), 2600);
+    return () => clearInterval(id);
+  }, []);
+  const current = items[i];
+  return <div className="hero-badge hero-badge-live"><span className="hero-badge-dot" /><span className="hero-badge-icon" key={`icon-${i}`}>{current.icon}</span><span className="hero-badge-text" key={`text-${i}`}>{current.text}</span></div>;
+}
+
+function SiteHeader() {
+  const [open, setOpen] = useState(false);
+  const links: Array<[string, string]> = [
+    ['#experiencias', 'Comprador'],
+    ['#experiencias', 'Vendedor'],
+    ['#como-funciona', 'Cómo funciona'],
+    ['#como-funciona', 'Nosotros'],
+    ['#descargar', 'Descargar la app'],
+  ];
+  return <header className="site-header">
+    <div className="nav-shell">
+      <a href="#inicio" className="brand" aria-label="RepuesTop, inicio"><img src="/assets/repuestop-icon.jpg" alt="" /><span>Repues<span>Top</span></span></a>
+      <nav className={`nav-links ${open ? 'is-open' : ''}`} aria-label="Navegación principal">
+        {links.map(([href, label]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}</a>)}
+      </nav>
+      <button type="button" className="menu-button" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
+    </div>
+  </header>;
+}
+
 function HomePage() {
   usePageMeta();
   const [infoMode, setInfoMode] = useState<InfoMode>('flow');
 
-  return <main className="single-page">
-    <section className="home-hero section" id="inicio"><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-copy"><Brand /><span className="eyebrow"><MapPin /> El punto de encuentro para los repuestos</span><h1>El repuesto que buscas. La conexión que <em>necesitas.</em></h1><p>RepuesTop conecta personas y tiendas en una experiencia ágil, confiable y creada para una nueva forma de moverse.</p><div className="button-row"><a href="#experiencias" className="button"><Zap /> Descubrir RepuesTop</a><a href="#como-funciona" className="button button-outline">Ver cómo funciona <ArrowDown /></a></div><div className="hero-platforms"><PlatformPill platform="android" /><PlatformPill platform="ios" soon /></div></div><div className="hero-visual"><div className="hero-badge"><span><strong>Compra y vende</strong> en un solo lugar</span></div><div className="image-panel"><img src="/assets/compradores.jpg" alt="Aplicación RepuesTop buscando repuestos por patente en Chile" /></div></div></section>
+  return <><SiteHeader /><main className="single-page">
+    <section className="home-hero section" id="inicio"><div className="hero-mesh" aria-hidden="true" /><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-copy"><div className="hero-topline"><Brand /><span className="hero-topline-divider" aria-hidden="true" /><span className="eyebrow hero-eyebrow"><MapPin /> El punto de encuentro para los repuestos</span></div><h1>El repuesto que buscas. La conexión que <em>necesitas.</em></h1><p>RepuesTop conecta personas y tiendas en una experiencia ágil, confiable y creada para una nueva forma de moverse.</p><div className="button-row"><a href="#experiencias" className="button"><Zap /> Descubrir RepuesTop</a><a href="#como-funciona" className="button button-outline">Ver cómo funciona <ArrowDown /></a></div><div className="hero-platforms"><PlatformPill platform="android" /><PlatformPill platform="ios" soon /></div></div><div className="hero-visual"><HeroLiveBadge /><div className="image-panel"><img src="/assets/compradores.jpg" alt="Aplicación RepuesTop buscando repuestos por patente en Chile" /><div className="scan-sweep" aria-hidden="true" /></div></div></section>
 
     <ExperienceTabs />
 
     <InfoHub mode={infoMode} setMode={setInfoMode} />
 
     <FinalStage setInfoMode={setInfoMode} />
-  </main>;
+  </main></>;
 }
 
 export default function App() {
