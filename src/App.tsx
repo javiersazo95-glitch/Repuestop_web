@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowDown, ArrowRight, BadgeCheck, Boxes, ChevronDown,
-  CircleDollarSign, FileSpreadsheet, Headphones, HeartHandshake, LockKeyhole,
+  Calculator, CircleDollarSign, Crown, FileCheck, FileSpreadsheet, Headphones, HeartHandshake, LockKeyhole,
   MessageSquareQuote, PackageCheck, Search, ShieldCheck, ShoppingCart,
   Smartphone, Store, Users, Zap, KeyRound, MapPin, UserRound,
   Package, CreditCard, CarFront, Truck, Mail, MessageCircle, ClipboardCheck,
@@ -13,41 +13,45 @@ type Feature = { icon: ReactNode; title: string; text: string };
 type ExperienceMode = 'buyer' | 'seller';
 
 const buyerFeatures: Feature[] = [
-  { icon: <Search />, title: 'Busca con confianza', text: 'Identifica tu vehículo por patente o selecciona marca, modelo, versión y año.' },
-  { icon: <BadgeCheck />, title: 'Tiendas verificadas', text: 'Encuentra alternativas publicadas por vendedores formalizados y validados.' },
-  { icon: <MessageSquareQuote />, title: 'Compra o cotiza', text: 'Compara opciones o solicita una cotización privada cuando el precio no sea público.' },
-  { icon: <PackageCheck />, title: 'Sigue tu pedido', text: 'Consulta el avance de tu compra y solicita ayuda cuando la necesites.' },
+  { icon: <Search />, title: 'Patente inteligente', text: 'Ingresa la patente y RepuesTop completa marca, modelo, año, versión y datos técnicos para partir con el vehículo correcto.' },
+  { icon: <BadgeCheck />, title: 'Catálogo filtrado', text: 'La búsqueda muestra repuestos asociados al vehículo seleccionado para reducir errores antes de comprar.' },
+  { icon: <MessageSquareQuote />, title: 'Cotizaciones por chat', text: 'Habla con la tienda y recibe una cotización formal con precio, descuento, garantía, disponibilidad y vigencia.' },
+  { icon: <LockKeyhole />, title: 'Pago protegido', text: 'Paga con Flow y mantenemos los fondos retenidos por 3 días tras la entrega para validar que el repuesto calza.' },
+  { icon: <PackageCheck />, title: 'Seguimiento claro', text: 'Revisa el avance desde pagado hasta finalizado con estados de preparación, envío, entrega y reclamo si hiciera falta.' },
+  { icon: <KeyRound />, title: 'Retiro con PIN', text: 'Si retiras en tienda, usas un PIN de 6 dígitos para confirmar la entrega de forma trazable.' },
 ];
 
 const sellerFeatures: Feature[] = [
-  { icon: <Users />, title: 'Llega a nuevos clientes', text: 'Conecta tu tienda con personas que buscan repuestos para vehículos concretos.' },
-  { icon: <FileSpreadsheet />, title: 'Carga tu inventario', text: 'Publica productos manualmente o prepara cargas masivas mediante Excel o CSV.' },
-  { icon: <CircleDollarSign />, title: 'Tú controlas tus precios', text: 'Publica precios o responde cotizaciones privadas según tu estrategia comercial.' },
-  { icon: <Boxes />, title: 'Gestiona tu operación', text: 'Administra stock, solicitudes, pedidos y comunicación desde un mismo lugar.' },
+  { icon: <Users />, title: 'Clientes con intención real', text: 'Tu tienda aparece frente a compradores que ya buscaron un vehículo y necesitan piezas compatibles.' },
+  { icon: <FileSpreadsheet />, title: 'Inventario flexible', text: 'Publica manualmente o carga stock masivo con Excel/CSV, imágenes y compatibilidades por producto.' },
+  { icon: <Calculator />, title: 'Precio con ganancia clara', text: 'Usa una calculadora que sugiere precio de lista según la ganancia neta que quieres obtener.' },
+  { icon: <MessageSquareQuote />, title: 'Cotizaciones formales', text: 'Responde por chat con precio final, descuento, garantía, disponibilidad, notas y tiempo de entrega.' },
+  { icon: <Truck />, title: 'Envíos configurables', text: 'Activa retiro en tienda, despacho local por comuna o courier nacional por pagar con tracking.' },
+  { icon: <Crown />, title: 'Tienda fundadora', text: 'Las tiendas que se inscriban al lanzamiento tendrán 5% fijo de comisión, sin importar el valor de la venta, y reconocimiento por creer temprano en RepuesTop.' },
 ];
 
 
 const experiences = {
   buyer: {
     label: 'Quiero comprar', icon: <ShoppingCart />, eyebrow: 'Para personas y talleres',
-    title: 'Encuentra el repuesto correcto sin perder tiempo',
-    text: 'Tu vehículo es el punto de partida. Busca por patente, compara alternativas de tiendas verificadas y elige con información clara.',
+    title: 'Encuentra repuestos compatibles y compra con respaldo',
+    text: 'Tu patente abre el camino: identificamos el vehículo, filtramos el catálogo, conectamos con tiendas verificadas y protegemos el pago durante la entrega.',
     features: buyerFeatures, image: '/assets/comprador-como-funciona.png',
-    stats: [['1 búsqueda', 'Todo parte con tu vehículo'], ['Tiendas verificadas', 'Más confianza al elegir'], ['Compra o cotiza', 'Tú decides cómo avanzar']],
+    stats: [['Patente o manual', 'Ficha técnica del vehículo'], ['3 días protegidos', 'Fondos retenidos tras entrega'], ['PIN de retiro', 'Entrega trazable en tienda']],
   },
   seller: {
-    label: 'Quiero vender', icon: <Store />, eyebrow: 'Para tiendas de repuestos',
-    title: 'Convierte tu inventario en nuevas oportunidades',
-    text: 'Digitaliza tu oferta, responde solicitudes y conecta con clientes que ya están buscando productos para un vehículo concreto.',
+    label: 'Soy proveedor', icon: <Store />, eyebrow: 'Para tiendas de repuestos',
+    title: 'Vende con inventario ordenado, cotizaciones y control de despacho',
+    text: 'Carga productos, responde oportunidades por chat, configura tus entregas y controla ganancias, pedidos en curso y ventas completadas desde un dashboard.',
     features: sellerFeatures, image: '/assets/vendedor-como-funciona.png',
-    stats: [['Más alcance', 'Llega a nuevos clientes'], ['Control total', 'Precios, stock y condiciones'], ['Todo en orden', 'Cotizaciones y pedidos']],
+    stats: [['5% fundador', 'Comisión fija por venta'], ['Excel/CSV', 'Carga masiva de stock'], ['Tienda verificada', 'Documentos revisados por soporte']],
   },
 } as const;
 
 function usePageMeta() {
   useEffect(() => {
-    document.title = 'RepuesTop | Compra y vende repuestos';
-    document.querySelector('meta[name="description"]')?.setAttribute('content', 'Compra o vende repuestos automotrices con una experiencia simple, confiable y moderna.');
+    document.title = 'RepuesTop | Repuestos por patente, tiendas verificadas y pago protegido';
+    document.querySelector('meta[name="description"]')?.setAttribute('content', 'Marketplace chileno de repuestos automotrices: busca por patente, compra en tiendas verificadas, cotiza por chat y paga con respaldo.');
   }, []);
 }
 
@@ -114,7 +118,7 @@ function ExperienceTabs() {
 
   return <section className={`experience-section experience-${mode}`} id="experiencias">
     <div className="section experience-shell">
-      <Reveal as="div" className="section-heading centered"><span className="eyebrow"><Users /> Una plataforma, dos experiencias</span><h2>Todo lo que necesitas, según tu objetivo</h2><p>Cambia de vista y descubre cómo RepuesTop trabaja para ti.</p></Reveal>
+      <Reveal as="div" className="section-heading centered"><span className="eyebrow"><Users /> Una plataforma, dos experiencias</span><h2>Compra con menos riesgo. Vende con más control.</h2><p>RepuesTop traduce flujos reales de búsqueda, cotización, pago, despacho y reclamos en una experiencia simple para ambos lados.</p></Reveal>
       <div className="experience-tabs" role="tablist" aria-label="Elige tu experiencia">
         {(Object.keys(experiences) as ExperienceMode[]).map(key => (
           <button 
@@ -140,11 +144,23 @@ function ExperienceTabs() {
         key={mode}
       >
         <div className="experience-content"><span className="eyebrow">{experience.eyebrow}</span><h2>{experience.title}</h2><p>{experience.text}</p><div className="experience-stats">{experience.stats.map(([value, label], i) => <Reveal as="div" key={value} delay={i * 70}><strong>{value}</strong><span>{label}</span></Reveal>)}</div><button className="button experience-cta" type="button" aria-expanded={expanded} onClick={() => setExpanded(!expanded)}>{expanded ? 'Ver menos' : 'Ver todo lo que ofrece'} <ChevronDown /></button></div>
-        <div className="experience-media"><div className="media-glow" /><div className="image-panel"><img src={experience.image} alt={experience.title} /></div><span className="floating-chip chip-top"><Zap /> Experiencia simple y rápida</span><span className="floating-chip chip-bottom"><BadgeCheck /> Información más clara</span></div>
+        <div className="experience-media"><div className="media-glow" /><div className="image-panel"><img src={experience.image} alt={experience.title} /></div><span className="floating-chip chip-top"><Zap /> Flujo real del MVP</span><span className="floating-chip chip-bottom"><BadgeCheck /> Respaldo en cada etapa</span></div>
       </div>
       <div className={`experience-features expandable-content ${expanded ? 'is-expanded' : ''}`} aria-hidden={!expanded}><FeatureGrid items={experience.features} /></div>
     </div>
   </section>;
+}
+
+function HeroProofStrip() {
+  const proofs = [
+    { icon: <Search />, title: 'Patente', text: 'Identifica el vehículo y completa sus datos técnicos.' },
+    { icon: <PackageCheck />, title: 'Compatibilidad', text: 'Catálogo filtrado para comprar con más contexto.' },
+    { icon: <LockKeyhole />, title: 'Pago protegido', text: 'Fondos retenidos 3 días tras la entrega.' },
+    { icon: <FileCheck />, title: 'Tiendas verificadas', text: 'Proveedores revisados antes de vender.' },
+  ];
+  return <section className="proof-strip" aria-label="Beneficios principales de RepuesTop"><div className="section proof-strip-grid">
+    {proofs.map((item, index) => <Reveal as="article" key={item.title} delay={index * 55}><span>{item.icon}</span><div><strong>{item.title}</strong><p>{item.text}</p></div></Reveal>)}
+  </div></section>;
 }
 
 type InfoMode = 'flow' | 'about' | 'help' | 'privacy';
@@ -169,116 +185,116 @@ const helpTopics: Record<HelpTopicKey, {
   buyers: {
     label: 'Compradores',
     icon: <UserRound />,
-    intro: 'Busca, compara y compra con claridad.',
-    title: 'Resuelve dudas antes de comprar',
-    description: 'Te ayudamos a entender compatibilidad, cotizaciones y seguimiento para que tu compra avance con más seguridad.',
+    intro: 'Patente, compatibilidad y compra protegida.',
+    title: 'Compra repuestos con más seguridad',
+    description: 'La app reduce la incertidumbre desde la identificación del vehículo hasta la entrega del repuesto.',
     questions: [
       {
-        icon: <ShoppingCart />,
-        question: '¿Cómo sé si un repuesto sirve para mi vehículo?',
-        answer: 'Puedes comenzar con tu patente o ingresar marca, modelo, versión y año. RepuesTop usa esa información como guía para mostrar alternativas relevantes y reducir errores al comprar.',
+        icon: <Search />,
+        question: '¿Cómo funciona la búsqueda por patente?',
+        answer: 'Ingresas la patente y RepuesTop intenta completar automáticamente marca, modelo, año, versión y datos técnicos. Si no se encuentra el vehículo, puedes usar el ingreso manual por marca, modelo, año y versión.',
       },
       {
         icon: <BadgeCheck />,
-        question: '¿Puedo comparar varias opciones antes de decidir?',
-        answer: 'Sí. La idea es que revises alternativas de distintas tiendas, compares condiciones y elijas la que te acomode mejor antes de confirmar una compra o una cotización.',
+        question: '¿Cómo ayuda la compatibilidad antes de comprar?',
+        answer: 'El catálogo se filtra con la ficha del vehículo seleccionado para mostrar repuestos asociados a ese auto. Así comparas con más contexto y reduces compras equivocadas.',
       },
       {
         icon: <MessageSquareQuote />,
-        question: '¿Qué hago si prefiero cotizar en vez de comprar de inmediato?',
-        answer: 'Puedes solicitar una cotización y revisar precio, disponibilidad y condiciones antes de avanzar. Así tomas la decisión con más contexto y sin apuro.',
+        question: '¿Puedo cotizar si tengo dudas?',
+        answer: 'Sí. Puedes abrir un chat con la tienda y recibir una cotización formal con precio unitario, descuento, garantía, disponibilidad, notas y días de vigencia.',
       },
       {
-        icon: <PackageCheck />,
-        question: '¿Cómo sigo mi pedido después de comprar?',
-        answer: 'Dentro de la experiencia podrás revisar el estado de tu pedido y recibir actualizaciones para mantener todo ordenado hasta la entrega.',
+        icon: <LockKeyhole />,
+        question: '¿Qué pasa si el repuesto no calza?',
+        answer: 'Tras la entrega se activa un periodo de 3 días de protección. Si hay un problema, puedes abrir un reclamo en el Centro de Ayuda y el pedido queda en revisión antes de liberar los fondos.',
       },
     ],
   },
   vendors: {
-    label: 'Vendedores',
+    label: 'Proveedores',
     icon: <Store />,
-    intro: 'Publica inventario y responde oportunidades.',
-    title: 'Dale visibilidad a tu tienda',
-    description: 'Si vendes repuestos, aquí encuentras respuestas para publicar productos, administrar tu oferta y atender solicitudes con más orden.',
+    intro: 'Inventario, cotización y ventas trazables.',
+    title: 'Convierte tu tienda en proveedor verificado',
+    description: 'RepuesTop te ayuda a ordenar stock, responder oportunidades reales y vender con reglas claras.',
     questions: [
       {
-        icon: <Store />,
-        question: '¿Cómo publico mi inventario?',
-        answer: 'Puedes subir productos de forma manual o preparar cargas más grandes cuando tengas muchos artículos. La idea es que tu catálogo sea fácil de mantener y actualizar.',
+        icon: <FileCheck />,
+        question: '¿Cómo se verifica una tienda?',
+        answer: 'La tienda queda pendiente y cerrada hasta que el equipo de soporte revise documentos como cédula del representante, RUT o inicio de actividades, patente municipal, documento tributario y contrato de adhesión.',
       },
       {
-        icon: <MessageSquareQuote />,
-        question: '¿Puedo responder cotizaciones privadas?',
-        answer: 'Sí. Puedes responder con precio, vigencia, disponibilidad y condiciones para que cada consulta quede bien resuelta sin necesidad de publicar todo al mismo tiempo.',
+        icon: <FileSpreadsheet />,
+        question: '¿Cómo cargo mi catálogo?',
+        answer: 'Puedes publicar productos uno a uno con imágenes, compatibilidades y precio, o subir stock de forma masiva mediante planillas Excel/CSV.',
       },
       {
-        icon: <Boxes />,
-        question: '¿Cómo mantengo mi stock ordenado?',
-        answer: 'RepuesTop está pensado para ayudarte a registrar movimientos básicos de tu operación y mantener una vista clara de lo que publicas y lo que tienes disponible.',
+        icon: <Calculator />,
+        question: '¿Cómo defino precios sin perder margen?',
+        answer: 'La publicación incluye una calculadora de precio sugerido basada en la ganancia neta que quieres obtener, para que publiques con más claridad comercial.',
       },
       {
-        icon: <Users />,
-        question: '¿La plataforma me ayuda a llegar a nuevos clientes?',
-        answer: 'Ese es justamente uno de los objetivos: conectar tu inventario con personas que ya están buscando una pieza específica para su vehículo.',
+        icon: <Crown />,
+        question: '¿Qué significa ser tienda fundadora?',
+        answer: 'Ser tienda fundadora significa entrar desde el lanzamiento, vender con una comisión fija del 5% sin importar el valor de la venta y destacar como uno de los primeros comercios que creyó en RepuesTop.',
       },
     ],
   },
   orders: {
     label: 'Pedidos',
     icon: <Package />,
-    intro: 'Sigue compras, estados y entregas.',
-    title: 'Todo el camino del pedido, más claro',
-    description: 'Ordenamos el seguimiento para que sepas qué pasó, qué falta y qué puedes revisar en cada etapa.',
+    intro: 'Estados, entrega y reclamos.',
+    title: 'Todo el camino del pedido queda trazado',
+    description: 'Cada compra avanza con estados claros, opciones de despacho y mecanismos de validación.',
     questions: [
       {
         icon: <Package />,
         question: '¿Cómo reviso el estado de un pedido?',
-        answer: 'Cada pedido podrá mostrar su avance paso a paso para que veas si fue recibido, revisado, preparado o resuelto según el caso.',
+        answer: 'El timeline muestra estados como Pagado, En preparación, En camino o Listo para retirar, Entregado, En reclamo y Finalizado.',
       },
       {
         icon: <Truck />,
-        question: '¿Cómo funcionan los envíos?',
-        answer: 'Las modalidades de despacho dependen de cada tienda, pero el objetivo es que conozcas costos, tiempos y condiciones antes de confirmar.',
+        question: '¿Qué métodos de despacho existen?',
+        answer: 'Hay retiro en tienda sin costo con PIN de 6 dígitos, despacho local si comprador y tienda están en la misma comuna, y courier nacional por pagar con empresa y número de seguimiento.',
       },
       {
-        icon: <ClipboardCheck />,
-        question: '¿Puedo dejar registrado un problema con mi pedido?',
-        answer: 'Sí. Si algo no coincide con lo esperado, puedes usar los canales de ayuda para reportarlo y revisarlo con más contexto.',
+        icon: <KeyRound />,
+        question: '¿Cómo funciona el retiro con PIN?',
+        answer: 'Al elegir retiro en tienda, el comprador recibe un PIN único de 6 dígitos. El vendedor lo ingresa al entregar el repuesto para validar la recepción.',
       },
       {
-        icon: <MessageCircle />,
-        question: '¿Recibiré actualizaciones durante el proceso?',
-        answer: 'La experiencia busca mantenerte informado con mensajes y estados claros para que no tengas que adivinar en qué va tu solicitud.',
+        icon: <Headphones />,
+        question: '¿Qué pasa si hay un reclamo?',
+        answer: 'El Centro de Ayuda adapta los motivos según el estado del pedido. Si no hay acuerdo, el equipo de soporte puede revisar evidencias y dejar el pedido en disputa con fondos retenidos.',
       },
     ],
   },
   payments: {
     label: 'Pagos',
     icon: <CreditCard />,
-    intro: 'Pagos claros, ordenados y trazables.',
-    title: 'Entiende cómo se gestiona el pago',
-    description: 'Aquí te explicamos cómo se manejan los cobros, qué verás antes de confirmar y qué cuidados aplicamos en la experiencia.',
+    intro: 'Flow, trazabilidad y resguardo.',
+    title: 'Pagos integrados con respaldo',
+    description: 'RepuesTop integra Flow para dar medios de pago conocidos y mantiene reglas de protección propias durante la entrega.',
     questions: [
       {
         icon: <CreditCard />,
-        question: '¿Qué medios de pago estarán disponibles?',
-        answer: 'Estamos trabajando para ofrecer medios de pago habituales y fáciles de entender. La disponibilidad final se mostrará con claridad dentro del servicio.',
-      },
-      {
-        icon: <BadgeCheck />,
-        question: '¿Quién procesa el pago?',
-        answer: 'La idea es que el proceso sea transparente y que veas con claridad qué parte corresponde a la tienda y qué parte a la plataforma cuando aplique.',
-      },
-      {
-        icon: <LockKeyhole />,
-        question: '¿Qué información de pago se guarda?',
-        answer: 'Solo la información necesaria para operar la compra o registrar el proceso. Evitamos pedir más datos de los necesarios para mantener la experiencia simple.',
+        question: '¿Cómo se protege mi pago?',
+        answer: 'El pago se confirma a través de Flow y RepuesTop retiene los fondos 3 días después de la entrega. Si existe un reclamo, el pedido puede quedar en disputa antes de liberar el dinero.',
       },
       {
         icon: <ShieldCheck />,
-        question: '¿Cómo sé que el cobro es seguro?',
-        answer: 'Usamos medidas razonables de protección y buenas prácticas para cuidar la operación. No lo planteamos como un servicio bancario, sino como una experiencia con seguridad y orden.',
+        question: '¿Qué permite pagar Flow?',
+        answer: 'Según la documentación oficial de Flow, Webpay permite pagos con tarjetas de débito, crédito y prepago. Flow también publica más de 30 medios de pago disponibles en Chile.',
+      },
+      {
+        icon: <CircleDollarSign />,
+        question: '¿Quién asume las comisiones?',
+        answer: 'La comisión comercial de RepuesTop se cobra al proveedor. Los costos de recaudación de Flow dependen de sus condiciones vigentes, por eso la web debe enlazar siempre a sus tarifas oficiales.',
+      },
+      {
+        icon: <ArrowRight />,
+        question: '¿Dónde puedo revisar información oficial de Flow?',
+        answer: 'Puedes revisar Webpay, métodos de pago, tarifas y reembolsos desde los enlaces oficiales de Flow incluidos en esta sección de pagos.',
       },
     ],
   },
@@ -326,6 +342,12 @@ function HelpExperience() {
           );
         })}
       </div>
+      {category === 'payments' && <div className="flow-official-links" aria-label="Enlaces oficiales de Flow">
+        <a href={siteConfig.flowUrls.webpay} target="_blank" rel="noopener noreferrer">Webpay en Flow <ArrowRight /></a>
+        <a href={siteConfig.flowUrls.paymentMethods} target="_blank" rel="noopener noreferrer">Métodos de pago <ArrowRight /></a>
+        <a href={siteConfig.flowUrls.tariffs} target="_blank" rel="noopener noreferrer">Tarifas vigentes <ArrowRight /></a>
+        <a href={siteConfig.flowUrls.refunds} target="_blank" rel="noopener noreferrer">Reembolsos y operación <ArrowRight /></a>
+      </div>}
       <div className="help-contact-bar"><span className="contact-question">?</span><div><strong>¿No encuentras lo que buscas?</strong><small>Escríbenos y te ayudamos con gusto.</small></div><a href={`mailto:${siteConfig.supportEmail}`}>Ir a contacto <ArrowRight /></a></div>
     </div>
   </div>;
@@ -358,33 +380,49 @@ function FlowExperience() {
   const flows = {
     buyer: {
       label: 'Comprador', icon: <ShoppingCart />,
-      summary: 'Encuentra el repuesto correcto sin llamar tienda por tienda ni adivinar si sirve para tu vehículo.',
+      summary: 'Desde la patente hasta la validación de entrega, cada paso reduce incertidumbre y deja trazabilidad.',
       steps: [
-        { icon: <Search />, title: 'Identifica tu vehículo', text: 'Busca por patente o ingresa marca, modelo, versión y año.' },
-        { icon: <BadgeCheck />, title: 'Compara alternativas', text: 'Revisa opciones de tiendas verificadas con información clara.' },
-        { icon: <MessageSquareQuote />, title: 'Compra o cotiza', text: 'Avanza directo o solicita una cotización si el precio no es público.' },
-        { icon: <PackageCheck />, title: 'Sigue tu pedido', text: 'Consulta el estado de tu compra hasta que llegue.' },
+        { icon: <Search />, title: 'Busca por patente', text: 'La app completa la ficha técnica o permite ingreso manual si no encuentra el vehículo.' },
+        { icon: <BadgeCheck />, title: 'Compara compatibles', text: 'El catálogo se filtra con la ficha del vehículo para mostrar opciones con más contexto.' },
+        { icon: <MessageSquareQuote />, title: 'Cotiza o compra', text: 'Puedes comprar directo o recibir una cotización formal por chat con garantía y vigencia.' },
+        { icon: <Truck />, title: 'Elige despacho', text: 'Retiro con PIN, despacho local por comuna o courier nacional por pagar con tracking.' },
+        { icon: <CreditCard />, title: 'Paga con Flow', text: 'El pago queda integrado y trazable antes de generar el pedido.' },
+        { icon: <PackageCheck />, title: 'Valida entrega', text: 'El pedido avanza por timeline y mantiene 3 días de resguardo tras recibir el repuesto.' },
       ],
-      benefits: [['Menos errores', 'Compatibilidad más clara antes de pagar'], ['Menos tiempo', 'Todo desde una sola búsqueda'], ['Más confianza', 'Solo tiendas verificadas']] as Array<[string, string]>,
+      benefits: [['Menos llamadas', 'Busca sin recorrer tienda por tienda'], ['Menos riesgo', 'Fondos protegidos tras entrega'], ['Más trazabilidad', 'Estados, chat y evidencia en un lugar']] as Array<[string, string]>,
     },
     seller: {
-      label: 'Vendedor', icon: <Store />,
-      summary: 'Convierte tu inventario en ventas sin depender solo del boca a boca o de planillas sueltas.',
+      label: 'Proveedor', icon: <Store />,
+      summary: 'Tu tienda entra verificada, publica stock, responde oportunidades y cobra cuando la entrega queda cerrada.',
       steps: [
-        { icon: <FileSpreadsheet />, title: 'Publica tu inventario', text: 'Carga manual o masiva de productos vía Excel o CSV.' },
-        { icon: <Users />, title: 'Recibe interesados', text: 'Personas y talleres que buscan justo lo que tienes.' },
-        { icon: <CircleDollarSign />, title: 'Responde y vende', text: 'Publica precios o responde cotizaciones privadas.' },
-        { icon: <Boxes />, title: 'Gestiona tu operación', text: 'Stock, pedidos y comunicación en un solo lugar.' },
+        { icon: <FileCheck />, title: 'Postula y verifica', text: 'Sube documentos; soporte revisa y abre la tienda cuando queda aprobada.' },
+        { icon: <FileSpreadsheet />, title: 'Carga catálogo', text: 'Publica manualmente o importa stock masivo con Excel/CSV y compatibilidades.' },
+        { icon: <MessageSquareQuote />, title: 'Cotiza en chat', text: 'Envía ofertas formales con precio final, descuento, garantía y tiempo de entrega.' },
+        { icon: <ClipboardCheck />, title: 'Gestiona pedidos', text: 'Prepara, marca listo para retiro o ingresa datos de courier y tracking.' },
+        { icon: <KeyRound />, title: 'Valida entrega', text: 'Ingresa el PIN del comprador cuando retira en tienda o registra el despacho realizado.' },
+        { icon: <CircleDollarSign />, title: 'Libera fondos', text: 'Tras 3 días desde la entrega, o cierre anticipado del comprador, el pago queda listo para cobro.' },
       ],
-      benefits: [['Más alcance', 'Nuevos clientes buscando tu producto'], ['Control total', 'Tú decides precios y condiciones'], ['Todo en orden', 'Menos planillas, más claridad']] as Array<[string, string]>,
+      benefits: [['Dashboard 2x2', 'Ganancias, pedidos y ventas visibles'], ['Control local', 'Retiro, comuna y courier configurables'], ['Tienda fundadora', 'Reconocimiento por entrar temprano']] as Array<[string, string]>,
     },
   } as const;
+  const deliveryOptions = [
+    { icon: <KeyRound />, title: 'Retiro en tienda', text: 'Costo $0 y entrega validada con PIN de 6 dígitos.' },
+    { icon: <MapPin />, title: 'Despacho local', text: 'Disponible solo si comprador y tienda comparten comuna.' },
+    { icon: <Truck />, title: 'Courier nacional', text: 'Modalidad por pagar con empresa y número de seguimiento.' },
+  ];
+  const orderStates = ['Pagado', 'En preparación', 'En camino / Listo para retirar', 'Entregado', 'En reclamo', 'Finalizado'];
+  const trustSignals = [
+    { icon: <LockKeyhole />, title: '3 días de resguardo', text: 'El pago no se libera inmediatamente tras entregar.' },
+    { icon: <Headphones />, title: 'Reclamos con soporte', text: 'El equipo de soporte revisa evidencia si comprador y proveedor no resuelven.' },
+    { icon: <ShieldCheck />, title: 'Suspensión preventiva', text: 'Cuentas infractoras pueden bloquearse en tiempo real.' },
+  ];
   const flow = flows[audience];
   return <div className="flow-experience">
     <div className="flow-intro-column">
-      <div className="flow-title-row"><span className="flow-title-icon"><Zap /></span><div><span className="eyebrow">Cómo funciona</span><h2>El repuesto correcto. La venta correcta.</h2><p>RepuesTop conecta dos necesidades del mismo mercado: encontrar el repuesto exacto y darle salida al inventario que ya existe.</p></div></div>
-      <div className="flow-problem-card"><span className="flow-problem-icon"><Search /></span><div><strong>El problema que resolvemos</strong><p>Hoy, buscar un repuesto significa llamar tienda por tienda sin saber si hay stock, si el precio es justo o si el vendedor es confiable. Y muchas tiendas de repuestos no tienen dónde mostrar lo que venden.</p></div></div>
+      <div className="flow-title-row"><span className="flow-title-icon"><Zap /></span><div><span className="eyebrow">Cómo funciona</span><h2>El repuesto correcto. La venta correcta.</h2><p>RepuesTop conecta búsqueda por patente, catálogo compatible, cotización, pago, despacho y reclamos en un flujo diseñado para el mercado chileno.</p></div></div>
+      <div className="flow-problem-card"><span className="flow-problem-icon"><Search /></span><div><strong>El problema que resolvemos</strong><p>Comprar repuestos suele depender de llamadas, fotos sueltas y confianza informal. RepuesTop ordena la información del vehículo, valida tiendas y deja registro de la compra.</p></div></div>
       <div className="flow-visual"><img src="/assets/como-funciona.jpg" alt="Cómo funciona RepuesTop" /></div>
+      <div className="trust-signal-grid">{trustSignals.map((item, index) => <Reveal as="article" key={item.title} delay={index * 60}><span>{item.icon}</span><div><strong>{item.title}</strong><p>{item.text}</p></div></Reveal>)}</div>
     </div>
     <div className="flow-content-column">
       <div className="flow-audience-tabs" role="tablist" aria-label="Cómo funciona para cada perfil">
@@ -393,6 +431,8 @@ function FlowExperience() {
       <p className="flow-summary">{flow.summary}</p>
       <div className="flow-steps-grid">{flow.steps.map((step, i) => <Reveal as="article" key={step.title} delay={i * 60}><b>{i + 1}</b><span className="flow-step-icon">{step.icon}</span><div><h3>{step.title}</h3><p>{step.text}</p></div></Reveal>)}</div>
       <div className="flow-benefit-row">{flow.benefits.map(([title, text]) => <span key={title}><strong>{title}</strong><small>{text}</small></span>)}</div>
+      <div className="delivery-grid">{deliveryOptions.map((item, index) => <Reveal as="article" key={item.title} delay={index * 55}><span>{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p></Reveal>)}</div>
+      <div className="order-state-strip" aria-label="Estados del pedido">{orderStates.map(state => <span key={state}>{state}</span>)}</div>
     </div>
   </div>;
 }
@@ -466,26 +506,65 @@ function InfoHub({ mode, setMode }: { mode: InfoMode; setMode: (mode: InfoMode) 
   </div></section>;
 }
 
+function FounderSection() {
+  const founderBenefits = [
+    { icon: <CircleDollarSign />, title: '5% fijo fundador', text: 'Comisión fija para tiendas fundadoras, sin importar el valor de cada venta.' },
+    { icon: <Crown />, title: 'Reconocimiento fundador', text: 'Distintivo para destacar a los comercios que creyeron temprano en RepuesTop.' },
+    { icon: <FileSpreadsheet />, title: 'Carga masiva preparada', text: 'Soporte para ordenar inventario con planillas Excel/CSV cuando comience la operación.' },
+    { icon: <Calculator />, title: 'Precio con margen', text: 'Calculadora para publicar pensando en ganancia neta.' },
+  ];
+  const verificationSteps = [
+    'Sube documentos de la tienda',
+    'Soporte revisa y observa si falta algo',
+    'Tienda aprobada aparece como verificada',
+  ];
+  return <section className="founder-section" id="proveedores">
+    <div className="section founder-shell">
+      <Reveal as="div" className="founder-copy">
+        <span className="eyebrow"><Crown /> Campaña proveedores</span>
+        <h2>Sé parte de las tiendas fundadoras de RepuesTop</h2>
+        <p>Estamos convocando a los primeros comercios que quieran creer en el proyecto desde el lanzamiento: tiendas reales, verificadas y protagonistas de una nueva forma de vender repuestos en Chile, con 5% fijo de comisión como beneficio fundador.</p>
+        <div className="founder-actions">
+          <a className="button" href={`mailto:${siteConfig.supportEmail}?subject=Quiero%20ser%20tienda%20fundadora%20de%20RepuesTop`}><Crown /> Quiero ser tienda fundadora</a>
+          <a className="button button-outline" href="#como-funciona">Ver cómo vender <ArrowRight /></a>
+        </div>
+      </Reveal>
+      <div className="founder-benefit-grid">
+        {founderBenefits.map((item, index) => <Reveal as="article" key={item.title} delay={index * 70}><span>{item.icon}</span><h3>{item.title}</h3><p>{item.text}</p></Reveal>)}
+      </div>
+      <Reveal as="aside" className="verification-card">
+        <span className="verification-icon"><FileCheck /></span>
+        <div>
+          <span className="eyebrow">Tienda verificada</span>
+          <h3>La tienda no se abre hasta ser aprobada</h3>
+          <p>El proveedor sube documentación comercial y tributaria. Si todo está correcto, el equipo de soporte aprueba la cuenta y activa la tienda al público.</p>
+          <div className="verification-steps">{verificationSteps.map((step, index) => <span key={step}><b>{index + 1}</b>{step}</span>)}</div>
+        </div>
+      </Reveal>
+    </div>
+  </section>;
+}
+
 function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) {
   const buyerHighlights = [
-    { icon: <Search />, label: 'Búsqueda por patente', text: 'Encuentra repuestos con más contexto' },
-    { icon: <BadgeCheck />, label: 'Repuestos compatibles', text: 'Compara antes de comprar' },
-    { icon: <ShieldCheck />, label: 'Compra protegida', text: 'Más claridad en cada paso' },
-    { icon: <Truck />, label: 'Seguimiento del pedido', text: 'Revisa el avance de tu compra' },
+    { icon: <Search />, label: 'Patente inteligente', text: 'Ficha del vehículo en segundos' },
+    { icon: <BadgeCheck />, label: 'Catálogo compatible', text: 'Opciones filtradas por vehículo' },
+    { icon: <ShieldCheck />, label: '3 días protegidos', text: 'Fondos retenidos tras entrega' },
+    { icon: <Truck />, label: 'Despacho trazable', text: 'PIN, comuna o courier con tracking' },
   ];
   const sellerHighlights = [
-    { icon: <Package />, label: 'Carga manual o masiva', text: 'Publica a tu ritmo' },
-    { icon: <MessageSquareQuote />, label: 'Cotizaciones', text: 'Responde consultas en tiempo real' },
-    { icon: <ClipboardCheck />, label: 'Gestión de pedidos', text: 'Controla estados y entregas' },
-    { icon: <Boxes />, label: 'Control de ventas', text: 'Monitorea tu operación' },
+    { icon: <Crown />, label: '5% fundador', text: 'Comisión fija sin importar la venta' },
+    { icon: <FileSpreadsheet />, label: 'Excel/CSV', text: 'Carga masiva de inventario' },
+    { icon: <ClipboardCheck />, label: 'Dashboard 2x2', text: 'Ganancias y pedidos visibles' },
+    { icon: <MessageSquareQuote />, label: 'Cotizaciones', text: 'Ofertas formales por chat' },
   ];
 
   return <section className="final-stage" id="descargar">
     <div className="section final-stage-shell">
       <Reveal as="div" className="final-stage-heading">
         <span className="eyebrow"><Smartphone /> La experiencia continúa en tu teléfono</span>
-        <h2>¿Listo para usar RepuesTop?</h2>
-        <p>Elige cómo quieres usar la plataforma y empieza con el flujo que más te convenga.</p>
+        <h2>Compra con respaldo. Vende con control.</h2>
+        <p>Elige tu lado de RepuesTop: encuentra repuestos compatibles por patente o postula tu tienda para vender como proveedor verificado.</p>
       </Reveal>
 
       <div className="final-stage-grid">
@@ -493,13 +572,13 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           <span className="route-icon"><Search /></span>
           <div>
             <h3>Soy comprador</h3>
-            <p>Busca por patente o manual, compara opciones y compra con seguimiento.</p>
+            <p>Busca por patente, cotiza por chat, paga con Flow y sigue tu pedido hasta validar la entrega.</p>
           </div>
           <div className="route-mini-grid">
             {buyerHighlights.map((item, i) => <Reveal as="span" key={item.label} delay={i * 60}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></Reveal>)}
           </div>
           <div className="route-actions">
-            <a className="button button-white" href="#experiencias">Buscar repuestos <ArrowRight /></a>
+            <a className="button button-white" href="#experiencias">Buscar repuestos compatibles <ArrowRight /></a>
             <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}?subject=Avisarme%20del%20lanzamiento`} onClick={() => trackEvent('launch_interest')}>
               <Smartphone /> Avísame del lanzamiento
             </a>
@@ -517,30 +596,30 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           <span className="route-icon"><Store /></span>
           <div>
             <h3>Soy vendedor</h3>
-            <p>Publica productos, recibe cotizaciones y gestiona tu operación desde un solo lugar.</p>
+            <p>Inscríbete al lanzamiento, verifica tu tienda, carga inventario y vende como comercio fundador con 5% fijo de comisión.</p>
           </div>
           <div className="route-mini-grid">
             {sellerHighlights.map((item, i) => <Reveal as="span" key={item.label} delay={i * 60}><i>{item.icon}</i><strong>{item.label}</strong><small>{item.text}</small></Reveal>)}
           </div>
           <div className="route-actions">
-            <a className="button button-white" href="#como-funciona">Quiero vender en RepuesTop <ArrowRight /></a>
+            <a className="button button-white" href="#proveedores">Quiero ser tienda fundadora <ArrowRight /></a>
             <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}`}><MessageCircle /> Hablar con el equipo</a>
           </div>
         </article>
       </div>
 
       <div className="final-benefits">
-        <Reveal as="span"><ShieldCheck /><div><strong>Tiendas verificadas</strong><small>Solo tiendas reales y validadas.</small></div></Reveal>
-        <Reveal as="span" delay={70}><PackageCheck /><div><strong>Compatibilidad clara</strong><small>Encuentra lo que realmente sirve.</small></div></Reveal>
-        <Reveal as="span" delay={140}><Headphones /><div><strong>Soporte y mediación</strong><small>Te acompañamos antes, durante y después.</small></div></Reveal>
-        <Reveal as="span" delay={210}><LockKeyhole /><div><strong>Pagos y pedidos protegidos</strong><small>Más orden en cada compra.</small></div></Reveal>
+        <Reveal as="span"><ShieldCheck /><div><strong>Tiendas verificadas</strong><small>Soporte revisa documentos antes de vender.</small></div></Reveal>
+        <Reveal as="span" delay={70}><PackageCheck /><div><strong>Compatibilidad filtrada</strong><small>El vehículo guía la búsqueda de repuestos.</small></div></Reveal>
+        <Reveal as="span" delay={140}><Headphones /><div><strong>Soporte y reclamos</strong><small>Disputas con evidencia y fondos retenidos.</small></div></Reveal>
+        <Reveal as="span" delay={210}><LockKeyhole /><div><strong>Pago protegido</strong><small>Flow más resguardo de 3 días tras entrega.</small></div></Reveal>
       </div>
 
       <footer className="final-footer">
         <div className="final-footer-grid">
           <div className="footer-column footer-brand-block">
             <Brand />
-            <p>Marketplace chileno para conectar compradores con tiendas de repuestos automotrices.</p>
+            <p>Marketplace chileno para buscar repuestos por patente, comprar con respaldo y conectar con tiendas verificadas.</p>
             <div className="store-badges">
               <PlatformPill platform="android" />
               <PlatformPill platform="ios" soon />
@@ -552,19 +631,20 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
             <a href="#como-funciona">Cómo funciona</a>
             <a href="#experiencias">Compradores</a>
             <a href="#experiencias">Vendedores</a>
+            <a href="#proveedores">Tiendas fundadoras</a>
             <a href="#como-funciona" onClick={() => setInfoMode('help')}>Ayuda</a>
           </div>
           <div className="footer-column">
             <strong>Confianza</strong>
             <a href="#como-funciona" onClick={() => setInfoMode('help')}>Tiendas verificadas</a>
-            <a href="#como-funciona" onClick={() => setInfoMode('help')}>Soporte y mediación</a>
+            <a href="#como-funciona" onClick={() => setInfoMode('help')}>Soporte y reclamos</a>
             <a href="#como-funciona" onClick={() => setInfoMode('privacy')}>Privacidad</a>
             <a href="#como-funciona" onClick={() => setInfoMode('privacy')}>Términos y condiciones</a>
           </div>
           <div className="footer-column footer-contact-column">
             <strong>Contacto</strong>
             <a href={`mailto:${siteConfig.supportEmail}`}><Mail /> {siteConfig.supportEmail}</a>
-            <a className="footer-cta" href={`mailto:${siteConfig.supportEmail}?subject=Quiero%20vender%20en%20RepuesTop`}>Quiero vender en RepuesTop <ArrowRight /></a>
+            <a className="footer-cta" href={`mailto:${siteConfig.supportEmail}?subject=Quiero%20ser%20tienda%20fundadora%20de%20RepuesTop`}>Tienda fundadora <ArrowRight /></a>
           </div>
         </div>
         <div className="footer-bottom-row">
@@ -582,10 +662,10 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
 
 function HeroLiveBadge() {
   const items = [
-    { icon: <Search />, text: 'Buscas por patente' },
-    { icon: <BadgeCheck />, text: 'Comparas tiendas verificadas' },
-    { icon: <ShoppingCart />, text: 'Compras o cotizas' },
-    { icon: <PackageCheck />, text: 'Sigues tu pedido' },
+    { icon: <Search />, text: 'Patente identifica tu vehículo' },
+    { icon: <BadgeCheck />, text: 'Catálogo filtrado por compatibilidad' },
+    { icon: <LockKeyhole />, text: 'Pago protegido por 3 días' },
+    { icon: <PackageCheck />, text: 'Pedido con timeline y reclamos' },
   ];
   const [i, setI] = useState(0);
   useEffect(() => {
@@ -600,9 +680,9 @@ function SiteHeader() {
   const [open, setOpen] = useState(false);
   const links: Array<[string, string]> = [
     ['#experiencias', 'Comprador'],
-    ['#experiencias', 'Vendedor'],
+    ['#experiencias', 'Proveedor'],
     ['#como-funciona', 'Cómo funciona'],
-    ['#como-funciona', 'Nosotros'],
+    ['#proveedores', 'Tiendas fundadoras'],
     ['#descargar', 'Descargar la app'],
   ];
   return <header className="site-header">
@@ -621,11 +701,15 @@ function HomePage() {
   const [infoMode, setInfoMode] = useState<InfoMode>('flow');
 
   return <><SiteHeader /><main className="single-page">
-    <section className="home-hero section" id="inicio"><div className="hero-mesh" aria-hidden="true" /><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-copy"><div className="hero-topline"><Brand /><span className="hero-topline-divider" aria-hidden="true" /><span className="eyebrow hero-eyebrow"><MapPin /> El punto de encuentro para los repuestos</span></div><h1>El repuesto que buscas. La conexión que <em>necesitas.</em></h1><p>RepuesTop conecta personas y tiendas en una experiencia ágil, confiable y creada para una nueva forma de moverse.</p><div className="button-row"><a href="#experiencias" className="button"><Zap /> Descubrir RepuesTop</a><a href="#como-funciona" className="button button-outline">Ver cómo funciona <ArrowDown /></a></div><div className="hero-platforms"><PlatformPill platform="android" /><PlatformPill platform="ios" soon /></div></div><div className="hero-visual"><HeroLiveBadge /><div className="image-panel"><img src="/assets/compradores.jpg" alt="Aplicación RepuesTop buscando repuestos por patente en Chile" /><div className="scan-sweep" aria-hidden="true" /></div></div></section>
+    <section className="home-hero section" id="inicio"><div className="hero-mesh" aria-hidden="true" /><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-copy"><div className="hero-topline"><Brand /><span className="hero-topline-divider" aria-hidden="true" /><span className="eyebrow hero-eyebrow"><MapPin /> Marketplace chileno de repuestos</span></div><h1>Repuestos por patente, tiendas verificadas y pago <em>protegido.</em></h1><p>RepuesTop identifica tu vehículo, filtra repuestos compatibles, permite cotizar por chat y mantiene la compra respaldada hasta validar la entrega.</p><div className="button-row"><a href="#experiencias" className="button"><Zap /> Comprar con respaldo</a><a href="#proveedores" className="button button-outline">Ser tienda fundadora <ArrowDown /></a></div><div className="hero-platforms"><PlatformPill platform="android" /><PlatformPill platform="ios" soon /></div></div><div className="hero-visual"><HeroLiveBadge /><div className="image-panel"><img src="/assets/compradores.jpg" alt="Aplicación RepuesTop buscando repuestos por patente en Chile" /><div className="scan-sweep" aria-hidden="true" /></div></div></section>
+
+    <HeroProofStrip />
 
     <ExperienceTabs />
 
     <InfoHub mode={infoMode} setMode={setInfoMode} />
+
+    <FounderSection />
 
     <FinalStage setInfoMode={setInfoMode} />
   </main></>;
