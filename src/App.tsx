@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Routes, Route, useNavigate } from 'react-router-dom';
+import SupportModal from './SupportModal';
+import FounderModal from './FounderModal';
+import FounderRegistration from './FounderRegistration';
 import {
   ArrowDown, ArrowRight, BadgeCheck, Boxes, ChevronDown,
   Calculator, CircleDollarSign, Crown, FileCheck, FileSpreadsheet, Headphones, HeartHandshake, LockKeyhole,
   MessageSquareQuote, PackageCheck, Search, ShieldCheck, ShoppingCart,
   Smartphone, Store, Users, Zap, KeyRound, MapPin, UserRound,
-  Package, CreditCard, CarFront, Truck, Mail, MessageCircle, ClipboardCheck,
+  Package, CreditCard, CarFront, Truck, Mail, MessageCircle, ClipboardCheck, Info,
   Menu, X,
 } from 'lucide-react';
 import { siteConfig, trackEvent } from './config';
@@ -300,7 +304,7 @@ const helpTopics: Record<HelpTopicKey, {
   },
 };
 
-function HelpExperience() {
+function HelpExperience({ onContact }: { onContact: () => void }) {
   const [category, setCategory] = useState<HelpTopicKey>('buyers');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const topic = helpTopics[category];
@@ -308,7 +312,7 @@ function HelpExperience() {
   return <div className="help-experience">
     <div className="help-intro-column">
       <div className="help-title-row"><span className="help-title-icon"><Headphones /></span><div><span className="eyebrow">Ayuda</span><h2>Respuestas rápidas.<br />Personas reales.</h2><p>Orientación para compradores y tiendas en cada etapa de la experiencia.</p></div></div>
-      <div className="support-showcase"><div className="support-visual"><span className="support-ring ring-one" /><span className="support-ring ring-two" /><Headphones /><MessageCircle /></div><div className="support-copy"><span>Estamos para ayudarte</span><h3>Nuestro equipo está listo para apoyarte</h3><p>Te ayudamos con compatibilidad, envíos, pagos y pedidos. Hablamos contigo.</p><a className="support-primary" href={`mailto:${siteConfig.supportEmail}`}><MessageCircle /> Contactar soporte <ArrowRight /></a><a className="support-secondary" href={`mailto:${siteConfig.supportEmail}`}><Mail /> Escribir a {siteConfig.supportEmail}</a></div></div>
+      <div className="support-showcase"><div className="support-visual"><span className="support-ring ring-one" /><span className="support-ring ring-two" /><Headphones /><MessageCircle /></div><div className="support-copy"><span>Estamos para ayudarte</span><h3>Nuestro equipo está listo para apoyarte</h3><p>Te ayudamos con compatibilidad, envíos, pagos y pedidos. Hablamos contigo.</p><button type="button" className="support-primary" onClick={onContact} style={{ border: 'none', cursor: 'pointer' }}><MessageCircle /> Contactar soporte <ArrowRight /></button><a className="support-secondary" href={`mailto:${siteConfig.supportEmail}`}><Mail /> Escribir a {siteConfig.supportEmail}</a></div></div>
       <div className="support-benefits"><span><Zap /><div><strong>Respuesta rápida</strong><small>Sin bots ni esperas innecesarias.</small></div></span><span><Users /><div><strong>Soporte humano</strong><small>Personas reales que entienden tu caso.</small></div></span><span><ClipboardCheck /><div><strong>Seguimiento</strong><small>Te acompañamos hasta resolverlo.</small></div></span></div>
     </div>
     <div className="help-faq-column">
@@ -348,7 +352,7 @@ function HelpExperience() {
         <a href={siteConfig.flowUrls.tariffs} target="_blank" rel="noopener noreferrer">Tarifas vigentes <ArrowRight /></a>
         <a href={siteConfig.flowUrls.refunds} target="_blank" rel="noopener noreferrer">Reembolsos y operación <ArrowRight /></a>
       </div>}
-      <div className="help-contact-bar"><span className="contact-question">?</span><div><strong>¿No encuentras lo que buscas?</strong><small>Escríbenos y te ayudamos con gusto.</small></div><a href={`mailto:${siteConfig.supportEmail}`}>Ir a contacto <ArrowRight /></a></div>
+      <div className="help-contact-bar"><span className="contact-question">?</span><div><strong>¿No encuentras lo que buscas?</strong><small>Escríbenos y te ayudamos con gusto.</small></div><button type="button" onClick={onContact} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>Ir a contacto <ArrowRight style={{ width: '16px' }} /></button></div>
     </div>
   </div>;
 }
@@ -463,13 +467,15 @@ function AboutExperience() {
       </div>
       <div className="about-section-block">
         <h3>Cómo lo resolvemos</h3>
-        <div className="about-values-grid">{approach.map((item, i) => <Reveal as="article" key={item.title} delay={i * 60}><span>{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p></Reveal>)}</div>
+        <div className="about-values-grid">
+          {approach.map((item, i) => <Reveal as="article" key={item.title} delay={i * 60}><span>{item.icon}</span><strong>{item.title}</strong><p>{item.text}</p></Reveal>)}
+        </div>
       </div>
     </div>
   </div>;
 }
 
-function InfoHub({ mode, setMode }: { mode: InfoMode; setMode: (mode: InfoMode) => void }) {
+function InfoHub({ mode, setMode, onContact }: { mode: InfoMode; setMode: (mode: InfoMode) => void; onContact: () => void; }) {
   const option = infoOptions[mode];
   return <section className={`info-hub hub-${option.tone}`} id="como-funciona"><div className="section">
     <Reveal as="div" className="matrix-heading centered"><span className="eyebrow"><MapPin /> Conoce RepuesTop</span><h2>Todo lo importante, a un toque</h2><p>Selecciona una categoría para explorar toda su información.</p></Reveal>
@@ -500,13 +506,14 @@ function InfoHub({ mode, setMode }: { mode: InfoMode; setMode: (mode: InfoMode) 
     >
       {mode === 'flow' && <FlowExperience />}
       {mode === 'about' && <AboutExperience />}
-      {mode === 'help' && <HelpExperience />}
+      {mode === 'help' && <HelpExperience onContact={onContact} />}
       {mode === 'privacy' && <PrivacyExperience />}
     </div>
   </div></section>;
 }
 
 function FounderSection() {
+  const navigate = useNavigate();
   const founderBenefits = [
     { icon: <CircleDollarSign />, title: '5% fijo fundador', text: 'Comisión fija para tiendas fundadoras, sin importar el valor de cada venta.' },
     { icon: <Crown />, title: 'Reconocimiento fundador', text: 'Distintivo para destacar a los comercios que creyeron temprano en RepuesTop.' },
@@ -525,7 +532,7 @@ function FounderSection() {
         <h2>Sé parte de las tiendas fundadoras de RepuesTop</h2>
         <p>Estamos convocando a los primeros comercios que quieran creer en el proyecto desde el lanzamiento: tiendas reales, verificadas y protagonistas de una nueva forma de vender repuestos en Chile, con 5% fijo de comisión como beneficio fundador.</p>
         <div className="founder-actions">
-          <a className="button" href={`mailto:${siteConfig.supportEmail}?subject=Quiero%20ser%20tienda%20fundadora%20de%20RepuesTop`}><Crown /> Quiero ser tienda fundadora</a>
+          <button type="button" className="button" onClick={() => navigate('/postular-fundador')} style={{ cursor: 'pointer' }}><Crown /> Quiero ser tienda fundadora</button>
           <a className="button button-outline" href="#como-funciona">Ver cómo vender <ArrowRight /></a>
         </div>
       </Reveal>
@@ -545,7 +552,7 @@ function FounderSection() {
   </section>;
 }
 
-function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) {
+function FinalStage({ setInfoMode, onContact }: { setInfoMode: (mode: InfoMode) => void; onContact: () => void; }) {
   const buyerHighlights = [
     { icon: <Search />, label: 'Patente inteligente', text: 'Ficha del vehículo en segundos' },
     { icon: <BadgeCheck />, label: 'Catálogo compatible', text: 'Opciones filtradas por vehículo' },
@@ -579,9 +586,9 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           </div>
           <div className="route-actions">
             <a className="button button-white" href="#experiencias">Buscar repuestos compatibles <ArrowRight /></a>
-            <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}?subject=Avisarme%20del%20lanzamiento`} onClick={() => trackEvent('launch_interest')}>
+            <button type="button" className="button button-ghost route-dark" onClick={onContact} style={{ cursor: 'pointer' }}>
               <Smartphone /> Avísame del lanzamiento
-            </a>
+            </button>
           </div>
         </article>
 
@@ -603,7 +610,7 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           </div>
           <div className="route-actions">
             <a className="button button-white" href="#proveedores">Quiero ser tienda fundadora <ArrowRight /></a>
-            <a className="button button-ghost route-dark" href={`mailto:${siteConfig.supportEmail}`}><MessageCircle /> Hablar con el equipo</a>
+            <button type="button" className="button button-ghost route-dark" onClick={onContact} style={{ cursor: 'pointer' }}><MessageCircle /> Hablar con el equipo</button>
           </div>
         </article>
       </div>
@@ -643,8 +650,8 @@ function FinalStage({ setInfoMode }: { setInfoMode: (mode: InfoMode) => void }) 
           </div>
           <div className="footer-column footer-contact-column">
             <strong>Contacto</strong>
-            <a href={`mailto:${siteConfig.supportEmail}`}><Mail /> {siteConfig.supportEmail}</a>
-            <a className="footer-cta" href={`mailto:${siteConfig.supportEmail}?subject=Quiero%20ser%20tienda%20fundadora%20de%20RepuesTop`}>Tienda fundadora <ArrowRight /></a>
+            <button type="button" onClick={onContact} style={{ background: 'none', border: 'none', color: 'inherit', textAlign: 'left', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', padding: 0 }}><Mail style={{ width: '16px' }} /> {siteConfig.supportEmail}</button>
+            <button type="button" className="footer-cta" onClick={onContact} style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', padding: 0 }}>Tienda fundadora <ArrowRight style={{ width: '16px' }} /></button>
           </div>
         </div>
         <div className="footer-bottom-row">
@@ -676,46 +683,100 @@ function HeroLiveBadge() {
   return <div className="hero-badge hero-badge-live"><span className="hero-badge-dot" /><span className="hero-badge-icon" key={`icon-${i}`}>{current.icon}</span><span className="hero-badge-text" key={`text-${i}`}>{current.text}</span></div>;
 }
 
-function SiteHeader() {
+function SiteHeader({ onContact, setInfoMode }: { onContact: () => void, setInfoMode: (mode: InfoMode) => void }) {
   const [open, setOpen] = useState(false);
-  const links: Array<[string, string]> = [
-    ['#experiencias', 'Comprador'],
-    ['#experiencias', 'Proveedor'],
-    ['#como-funciona', 'Cómo funciona'],
-    ['#proveedores', 'Tiendas fundadoras'],
-    ['#descargar', 'Descargar la app'],
+  const links = [
+    { href: '#experiencias', label: 'Para compradores', icon: <UserRound size={16} strokeWidth={2.5} />, chevron: true },
+    { href: '#proveedores', label: 'Para proveedores', icon: <Store size={16} strokeWidth={2.5} />, chevron: true },
+    { href: '#como-funciona', label: 'Cómo funciona', icon: <Info size={16} strokeWidth={2.5} />, mode: 'flow' as InfoMode },
+    { href: '#como-funciona', label: 'Nosotros', icon: <Users size={16} strokeWidth={2.5} />, chevron: true, mode: 'about' as InfoMode },
   ];
   return <header className="site-header">
     <div className="nav-shell">
       <a href="#inicio" className="brand" aria-label="RepuesTop, inicio"><img src="/assets/repuestop-icon.jpg" alt="" /><span>Repues<span>Top</span></span></a>
+      
       <nav className={`nav-links ${open ? 'is-open' : ''}`} aria-label="Navegación principal">
-        {links.map(([href, label]) => <a key={label} href={href} onClick={() => setOpen(false)}>{label}</a>)}
+        {links.map(({ href, label, icon, chevron, mode }) => (
+          <a
+            key={label}
+            href={href}
+            onClick={() => {
+              setOpen(false);
+              if (mode) setInfoMode(mode);
+            }}
+            className="nav-item"
+          >
+            {icon && <span className="nav-icon">{icon}</span>}
+            <span className="nav-label">{label}</span>
+            {chevron && <ChevronDown size={14} strokeWidth={3} className="nav-chevron" />}
+          </a>
+        ))}
       </nav>
+
+      <div className={`header-actions ${open ? 'is-open' : ''}`}>
+        <a href="#descargar" className="button button-outline" onClick={() => setOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 14px', fontSize: '0.8rem', minHeight: '38px', borderRadius: '8px' }}>
+          <Smartphone size={16} strokeWidth={2.5} /> Descargar app
+        </a>
+        <button type="button" onClick={() => { setOpen(false); onContact(); }} style={{
+          background: 'var(--blue)', color: '#fff', border: 'none', display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '8px 16px', borderRadius: '8px', cursor: 'pointer',
+          fontWeight: 600, fontSize: '0.875rem'
+        }}>
+          <MessageCircle size={16} strokeWidth={2.5} /> Contactar
+        </button>
+      </div>
+
       <button type="button" className="menu-button" aria-label={open ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={open} onClick={() => setOpen(!open)}>{open ? <X /> : <Menu />}</button>
     </div>
   </header>;
 }
 
-function HomePage() {
+function HomePage({ onContact }: { onContact: () => void }) {
   usePageMeta();
   const [infoMode, setInfoMode] = useState<InfoMode>('flow');
+  const [founderModalOpen, setFounderModalOpen] = useState(false);
 
-  return <><SiteHeader /><main className="single-page">
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setFounderModalOpen(true);
+    }, 1500);
+    return () => clearTimeout(t);
+  }, []);
+
+  return <>
+    <FounderModal isOpen={founderModalOpen} onClose={() => setFounderModalOpen(false)} />
+    <SiteHeader onContact={onContact} setInfoMode={setInfoMode} />
+    <main className="single-page">
     <section className="home-hero section" id="inicio"><div className="hero-mesh" aria-hidden="true" /><div className="hero-orb orb-one" /><div className="hero-orb orb-two" /><div className="hero-copy"><div className="hero-topline"><Brand /><span className="hero-topline-divider" aria-hidden="true" /><span className="eyebrow hero-eyebrow"><MapPin /> Marketplace chileno de repuestos</span></div><h1>Repuestos por patente, tiendas verificadas y pago <em>protegido.</em></h1><p>RepuesTop identifica tu vehículo, filtra repuestos compatibles, permite cotizar por chat y mantiene la compra respaldada hasta validar la entrega.</p><div className="button-row"><a href="#experiencias" className="button"><Zap /> Comprar con respaldo</a><a href="#proveedores" className="button button-outline">Ser tienda fundadora <ArrowDown /></a></div><div className="hero-platforms"><PlatformPill platform="android" /><PlatformPill platform="ios" soon /></div></div><div className="hero-visual"><HeroLiveBadge /><div className="image-panel"><img src="/assets/compradores.jpg" alt="Aplicación RepuesTop buscando repuestos por patente en Chile" /><div className="scan-sweep" aria-hidden="true" /></div></div></section>
 
     <HeroProofStrip />
 
     <ExperienceTabs />
 
-    <InfoHub mode={infoMode} setMode={setInfoMode} />
+    <InfoHub mode={infoMode} setMode={setInfoMode} onContact={onContact} />
 
     <FounderSection />
 
-    <FinalStage setInfoMode={setInfoMode} />
+    <FinalStage setInfoMode={setInfoMode} onContact={onContact} />
   </main></>;
 }
 
+function HomeRoute() {
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  return (
+    <>
+      <HomePage onContact={() => setIsSupportModalOpen(true)} />
+      <SupportModal isOpen={isSupportModalOpen} onClose={() => setIsSupportModalOpen(false)} />
+    </>
+  );
+}
+
 export default function App() {
-  return <HomePage />;
+  return (
+    <Routes>
+      <Route path="/" element={<HomeRoute />} />
+      <Route path="/postular-fundador" element={<FounderRegistration />} />
+    </Routes>
+  );
 }
 
