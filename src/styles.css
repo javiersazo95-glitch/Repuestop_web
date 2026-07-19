@@ -1239,20 +1239,31 @@ p { color: var(--muted); line-height: 1.75; }
 
 .founder-reg-success-pill { display: inline-flex; align-items: center; gap: 6px; background: #e7f8ef; color: #157a45; font-weight: 700; font-size: .74rem; padding: 5px 12px; border-radius: 999px; margin-bottom: 12px; }
 
-/* Google */
-.founder-reg-google { margin-bottom: 4px; }
-.founder-reg-google-btn { display: flex; justify-content: center; min-height: 44px; }
-.founder-reg-google-active { display: flex; align-items: center; gap: 12px; border: 1px solid #d7e6d9; background: #f2faf4; border-radius: 12px; padding: 12px 14px; color: #157a45; }
-.founder-reg-google-active > div { flex: 1; display: grid; }
-.founder-reg-google-active strong { color: var(--navy); font-size: .88rem; }
-.founder-reg-google-active span { color: var(--muted); font-size: .72rem; }
-.founder-reg-google-active button { border: none; background: transparent; color: var(--muted); cursor: pointer; padding: 4px; }
-.founder-reg-google-disabled { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.founder-reg-google-disabled .button { width: 100%; opacity: .55; cursor: not-allowed; }
-.founder-reg-google-disabled small { color: var(--muted); font-size: .72rem; }
-.founder-reg-or { position: relative; text-align: center; margin: 18px 0 4px; }
-.founder-reg-or::before { content: ''; position: absolute; top: 50%; left: 0; right: 0; height: 1px; background: var(--line); }
-.founder-reg-or span { position: relative; background: #fff; padding: 0 12px; color: var(--muted); font-size: .74rem; font-weight: 600; }
+/* Google (botón embebido, usado en el selector de método y en retomar postulación) */
+.founder-reg-google-btn { display: flex; justify-content: center; min-height: 44px; margin-top: auto; }
+
+/* Selector de método de creación de cuenta */
+.founder-reg-method-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 6px; }
+.founder-reg-method-card { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; border: 1.5px solid var(--line); border-radius: 16px; padding: 22px 20px; background: #fff; transition: border-color .2s, box-shadow .2s; }
+.founder-reg-method-card:hover { border-color: var(--blue); box-shadow: 0 10px 24px rgba(7,27,69,.08); }
+.founder-reg-method-icon { width: 46px; height: 46px; border-radius: 13px; display: grid; place-items: center; background: #f3f5f7; }
+.founder-reg-method-icon-manual { background: linear-gradient(145deg,#eaf2ff,#d7e8ff); color: var(--blue); }
+.founder-reg-method-card h3 { margin: 0; font-size: 1.02rem; color: var(--navy); letter-spacing: -.01em; }
+.founder-reg-method-card p { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.5; }
+.founder-reg-method-btn { width: 100%; justify-content: center; cursor: pointer; margin-top: auto; }
+.founder-reg-method-card .founder-reg-hint-error { margin: 0; }
+.founder-reg-method-card .founder-reg-hint { text-align: center; width: 100%; margin: 0; }
+
+.founder-reg-method-note { display: flex; align-items: flex-start; gap: 9px; margin-top: 20px; padding: 13px 15px; background: #eef5ff; border: 1px solid #d7e6fb; border-radius: 12px; color: #2a4a72; font-size: .82rem; line-height: 1.5; }
+.founder-reg-method-note svg { flex: none; color: var(--blue); margin-top: 2px; }
+
+.founder-reg-method-pill { display: flex; align-items: center; gap: 12px; background: var(--soft); border-radius: 14px; padding: 13px 16px; margin-bottom: 22px; }
+.founder-reg-method-pill > svg { flex: none; color: var(--blue); }
+.founder-reg-method-pill > div { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.founder-reg-method-pill strong { color: var(--navy); font-size: .86rem; }
+.founder-reg-method-pill span { color: var(--muted); font-size: .74rem; }
+.founder-reg-method-change { flex: none; background: #fff; color: var(--blue); font-weight: 700; font-size: .76rem; padding: 8px 12px; border-radius: 9px; cursor: pointer; border: 1px solid var(--line); }
+.founder-reg-method-change:hover { border-color: var(--blue); }
 
 /* Grid de campos */
 .founder-reg-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 16px; margin-top: 18px; }
@@ -1317,6 +1328,42 @@ p { color: var(--muted); line-height: 1.75; }
 .founder-file-text small { color: var(--muted); font-size: .72rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .founder-file-check { color: #157a45; flex: none; }
 
+/* Aviso de corrección al retomar una postulación rechazada */
+.founder-reg-notice { display: flex; gap: 10px; align-items: flex-start; background: #fff8e8; border: 1px solid #ffe6a3; border-radius: 12px; padding: 13px 15px; margin-bottom: 18px; }
+.founder-reg-notice svg { color: #b5750a; flex: none; margin-top: 2px; }
+.founder-reg-notice strong { display: block; color: #6b4a00; font-size: .84rem; margin-bottom: 3px; }
+.founder-reg-notice span { color: #7a5c1a; font-size: .82rem; line-height: 1.5; }
+
+.founder-reg-icon-blocked { background: linear-gradient(145deg,#ffe3e0,#ffc7c0); color: #b23a2c; }
+
+/* Retomar postulación — link de entrada en el aside */
+.founder-reg-resume-link { display: flex; align-items: center; gap: 12px; margin-top: 22px; background: linear-gradient(135deg, rgba(255,213,88,.16), rgba(255,184,0,.08)); border: 1.5px solid rgba(255,184,0,.55); color: #fff; font-size: .8rem; padding: 13px 14px; border-radius: 14px; cursor: pointer; transition: transform .2s, border-color .2s, background .2s; text-align: left; animation: resume-glow 2.6s ease-in-out infinite; }
+.founder-reg-resume-link:hover { transform: translateY(-1px); border-color: #ffd558; background: linear-gradient(135deg, rgba(255,213,88,.26), rgba(255,184,0,.14)); }
+.founder-reg-resume-link-icon { flex: none; width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: linear-gradient(145deg, #ffd558, #ffb800); color: #402700; }
+.founder-reg-resume-link-text { display: flex; flex-direction: column; gap: 1px; }
+.founder-reg-resume-link-text strong { color: #ffd558; font-weight: 800; font-size: .82rem; letter-spacing: -.01em; }
+.founder-reg-resume-link-text span { color: rgba(255,255,255,.78); font-weight: 500; font-size: .74rem; }
+@keyframes resume-glow { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,184,0,.22); } 50% { box-shadow: 0 0 0 7px rgba(255,184,0,0); } }
+
+/* Tarjeta de retomar postulación */
+.founder-reg-resume-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 20px; }
+.founder-reg-resume-head h2 { margin: 0 0 6px; font-size: 1.3rem; letter-spacing: -.02em; }
+.founder-reg-resume-head p { margin: 0; color: var(--muted); font-size: .88rem; }
+.founder-reg-resume-close { flex: none; border: none; background: var(--soft); color: var(--muted); width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; transition: background .2s; }
+.founder-reg-resume-close:hover { background: #e6eaef; }
+
+.founder-reg-resume-tabs { display: flex; gap: 8px; background: var(--soft); border-radius: 12px; padding: 5px; margin-bottom: 20px; }
+.founder-reg-resume-tabs button { flex: 1; border: none; background: transparent; color: var(--muted); font-weight: 700; font-size: .84rem; padding: 10px; border-radius: 9px; cursor: pointer; transition: background .2s, color .2s; }
+.founder-reg-resume-tabs button.is-active { background: #fff; color: var(--navy); box-shadow: 0 4px 12px rgba(7,27,69,.08); }
+
+.founder-reg-resume-body { display: flex; flex-direction: column; gap: 4px; }
+.founder-reg-resume-search { display: flex; gap: 10px; }
+.founder-reg-resume-search input { flex: 1; }
+.founder-reg-resume-search .button { flex: none; padding: 0 18px; cursor: pointer; }
+
+.founder-reg-forgot { display: inline-flex; align-items: center; gap: 5px; margin-top: 12px; align-self: flex-start; background: transparent; border: none; color: var(--muted); font-weight: 600; font-size: .78rem; cursor: pointer; }
+.founder-reg-hint { color: var(--muted); font-size: .8rem; margin-top: 14px; }
+
 @media (max-width: 900px) {
   .founder-reg-shell { grid-template-columns: 1fr; gap: 20px; }
   .founder-reg-aside { position: static; }
@@ -1329,6 +1376,10 @@ p { color: var(--muted); line-height: 1.75; }
   .founder-reg-docs { grid-template-columns: 1fr; }
   .founder-timeline { grid-template-columns: 1fr; }
   .founder-reg-brand span { display: none; }
+  .founder-reg-resume-search { flex-direction: column; }
+  .founder-reg-method-grid { grid-template-columns: 1fr; }
+  .founder-reg-method-pill { flex-wrap: wrap; }
+  .founder-reg-method-change { width: 100%; }
 }
 
 /* Enlaces legales + modal de términos/privacidad */

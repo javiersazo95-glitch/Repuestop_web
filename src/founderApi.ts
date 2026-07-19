@@ -28,6 +28,8 @@ export type SellerRegistrationPayload = {
   hours?: string;
   shippingMethods?: string;
   acceptsTerms: boolean;
+  /** Le dice al backend que esta tienda se postuló desde la web, para enrutar bien el correo de resultado de verificación. */
+  origin: 'SITIO_WEB';
 };
 
 export type EmailVerificationPending = {
@@ -69,6 +71,18 @@ export type VerificacionResponse = {
  * HTTP helper
  * ------------------------------------------------------------------ */
 
+/** Error de API con status HTTP + código (`ApiErrorDTO.error`, ej. "DUPLICATE_RESOURCE") para poder ramificar sin parsear texto. */
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  constructor(message: string, status: number, code?: string) {
+    super(message);
+    this.name = 'ApiError';
+    this.status = status;
+    this.code = code;
+  }
+}
+
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const res = await fetch(`${API_URL}${path}`, init);
   const text = await res.text();
@@ -80,10 +94,10 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   if (!res.ok) {
     const message =
-      (data && (data.message || data.error || data.detail)) ||
+      (data && (data.message || data.detail)) ||
       (typeof data === 'string' && data) ||
       'No pudimos completar la solicitud. Intenta nuevamente.';
-    throw new Error(message);
+    throw new ApiError(message, res.status, data?.error);
   }
   return data as T;
 }
@@ -166,6 +180,104 @@ export function uploadVerificacion(
 }
 
 /* ------------------------------------------------------------------ *
+ * Retomar postulación (correo/RUT con solicitud en curso)
+ * ------------------------------------------------------------------ */
+
+export type SellerSession = {
+  token: string;
+  sellerId: string;
+  storeName: string;
+  founder: boolean;
+  sellerBlocked: boolean;
+  sellerBlockReason?: string | null;
+};
+
+function extractSellerSession(data: any): SellerSession {
+  return {
+    token: data.token,
+    sellerId: data.sellerId,
+    storeName: data.storeName,
+    founder: Boolean(data.founder),
+    sellerBlocked: Boolean(data.sellerBlocked),
+    sellerBlockReason: data.sellerBlockReason ?? null,
+  };
+}
+
+/** Login normal por correo. Falla con ApiError si la cuenta no existe, la clave es incorrecta o el correo no está verificado. */
+export async function loginSeller(email: string, password: string): Promise<SellerSession> {
+  const data = await request<any>('/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password, authProvider: 'EMAIL_PASSWORD' }),
+  });
+  return extractSellerSession(data);
+}
+
+/** Login por el RUT de la tienda en vez del correo — para cuando el vendedor no recuerda con qué correo se registró. */
+export async function loginSellerByTaxId(taxId: string, password: string): Promise<SellerSession> {
+  const data = await request<any>('/auth/login-by-taxid', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ taxId, password }),
+  });
+  return extractSellerSession(data);
+}
+
+/** Login con Google: si ya existe una cuenta con ese correo, retorna la sesión directamente (sirve para retomar). */
+export async function loginSellerWithGoogle(idToken: string): Promise<SellerSession> {
+  const data = await request<any>('/auth/google', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  });
+  return extractSellerSession(data);
+}
+
+export type SellerLookup = { found: boolean; maskedEmail?: string | null; authProvider?: string | null };
+
+/** Búsqueda pública y de solo lectura por RUT: confirma si existe una tienda y con qué método se registró, sin exponer el correo completo. */
+export function lookupSellerByTaxId(taxId: string): Promise<SellerLookup> {
+  return request<SellerLookup>(`/auth/seller-lookup?taxId=${encodeURIComponent(taxId)}`);
+}
+
+/** Estado de la verificación documental. `null` si el vendedor todavía no sube documentos (404 del backend). */
+export async function fetchVerificacionStatus(sellerId: string, token: string): Promise<VerificacionResponse | null> {
+  try {
+    return await request<VerificacionResponse>(`/proveedores/${encodeURIComponent(sellerId)}/verificacion`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
+/** Envía un código de recuperación. Con rol PROVEEDOR, `identifier` debe ser el RUT de la tienda (así lo espera el backend). Retorna el correo real al que se envió. */
+export function sendSellerRecoverCode(taxId: string): Promise<{ message: string; email: string }> {
+  return request('/auth/recover-password/send-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: taxId, rol: 'PROVEEDOR' }),
+  });
+}
+
+export function verifySellerRecoverCode(email: string, code: string): Promise<{ message: string }> {
+  return request('/auth/recover-password/verify-code', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, rol: 'PROVEEDOR', code }),
+  });
+}
+
+export function resetSellerPassword(email: string, code: string, newPassword: string): Promise<{ message: string }> {
+  return request('/auth/recover-password/reset', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, rol: 'PROVEEDOR', code, newPassword }),
+  });
+}
+
+/* ------------------------------------------------------------------ *
  * Google Identity Services
  * ------------------------------------------------------------------ */
 
@@ -197,14 +309,12 @@ function decodeJwt(token: string): any {
   return JSON.parse(decodeURIComponent(escape(json)));
 }
 
-/**
- * Renderiza el botón oficial de Google dentro de `container`.
- * `onProfile` recibe el id_token + datos decodificados para prefill.
- */
-export async function renderGoogleButton(
+/** Monta el botón oficial de Google en `container` e invoca `onCredential` con el id_token crudo cada vez que el usuario elige una cuenta. */
+async function mountGoogleButton(
   container: HTMLElement,
-  onProfile: (profile: GoogleProfile) => void,
+  onCredential: (idToken: string) => void,
   onError?: (message: string) => void,
+  buttonText: 'continue_with' | 'signin_with' = 'continue_with',
 ): Promise<void> {
   if (!googleEnabled) return;
   try {
@@ -212,26 +322,14 @@ export async function renderGoogleButton(
     const google = (window as any).google;
     google.accounts.id.initialize({
       client_id: GOOGLE_CLIENT_ID,
-      callback: (resp: { credential: string }) => {
-        try {
-          const claims = decodeJwt(resp.credential);
-          onProfile({
-            idToken: resp.credential,
-            email: claims.email,
-            name: claims.name || `${claims.given_name ?? ''} ${claims.family_name ?? ''}`.trim(),
-            picture: claims.picture,
-          });
-        } catch {
-          onError?.('No pudimos leer tu cuenta de Google.');
-        }
-      },
+      callback: (resp: { credential: string }) => onCredential(resp.credential),
     });
     container.innerHTML = '';
     google.accounts.id.renderButton(container, {
       type: 'standard',
       theme: 'outline',
       size: 'large',
-      text: 'continue_with',
+      text: buttonText,
       shape: 'pill',
       logo_alignment: 'center',
       width: container.clientWidth || 360,
@@ -240,4 +338,51 @@ export async function renderGoogleButton(
   } catch (e: any) {
     onError?.(e?.message || 'No se pudo iniciar Google Sign-In');
   }
+}
+
+/**
+ * Renderiza el botón oficial de Google dentro de `container` para prellenar el formulario de registro.
+ * `onProfile` recibe el id_token + datos decodificados (no autentica todavía; eso ocurre al enviar el registro).
+ */
+export function renderGoogleButton(
+  container: HTMLElement,
+  onProfile: (profile: GoogleProfile) => void,
+  onError?: (message: string) => void,
+): Promise<void> {
+  return mountGoogleButton(container, (idToken) => {
+    try {
+      const claims = decodeJwt(idToken);
+      onProfile({
+        idToken,
+        email: claims.email,
+        name: claims.name || `${claims.given_name ?? ''} ${claims.family_name ?? ''}`.trim(),
+        picture: claims.picture,
+      });
+    } catch {
+      onError?.('No pudimos leer tu cuenta de Google.');
+    }
+  }, onError);
+}
+
+/**
+ * Renderiza el botón de Google para RETOMAR una postulación: autentica de inmediato contra
+ * `/auth/google`. Si no existe una cuenta RepuesTop con ese correo, informa un error claro
+ * en vez de crear una cuenta nueva silenciosamente.
+ */
+export function renderGoogleResumeButton(
+  container: HTMLElement,
+  onSession: (session: SellerSession) => void,
+  onError: (message: string) => void,
+): Promise<void> {
+  return mountGoogleButton(container, (idToken) => {
+    loginSellerWithGoogle(idToken)
+      .then(onSession)
+      .catch((e: any) => {
+        if (e instanceof ApiError && e.status === 404) {
+          onError('No encontramos una tienda RepuesTop asociada a esa cuenta de Google.');
+        } else {
+          onError(e?.message || 'No pudimos iniciar sesión con Google.');
+        }
+      });
+  }, onError, 'signin_with');
 }
