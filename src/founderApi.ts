@@ -241,6 +241,19 @@ export function lookupSellerByTaxId(taxId: string): Promise<SellerLookup> {
   return request<SellerLookup>(`/auth/seller-lookup?taxId=${encodeURIComponent(taxId)}`);
 }
 
+export type EmailCheck = {
+  exists: boolean;
+  isApproved: boolean;
+  status: string | null;
+  role: string | null;
+  message: string | null;
+};
+
+/** Verificación rápida de disponibilidad de correo (sin crear nada), para avisar de inmediato si ya está registrado. */
+export function checkEmailAvailability(email: string): Promise<EmailCheck> {
+  return request<EmailCheck>(`/auth/check-email?email=${encodeURIComponent(email)}`);
+}
+
 /** Estado de la verificación documental. `null` si el vendedor todavía no sube documentos (404 del backend). */
 export async function fetchVerificacionStatus(sellerId: string, token: string): Promise<VerificacionResponse | null> {
   try {

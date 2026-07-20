@@ -11,7 +11,7 @@ import {
   uploadVerificacion, renderGoogleButton, renderGoogleResumeButton, googleEnabled,
   isPendingVerification, ApiError,
   loginSeller, loginSellerByTaxId, lookupSellerByTaxId, fetchVerificacionStatus,
-  sendSellerRecoverCode, verifySellerRecoverCode, resetSellerPassword,
+  sendSellerRecoverCode, verifySellerRecoverCode, resetSellerPassword, checkEmailAvailability,
   type UbicacionOption, type GoogleProfile, type SellerRegistrationPayload,
   type SellerSession, type SellerLookup, type VerificacionResponse,
 } from './founderApi';
@@ -25,6 +25,8 @@ const GIRO_OPTIONS = [
   'Mantenimiento y reparación de vehículos motorizados',
   'Venta de vehículos motorizados',
 ];
+
+const PANEL_VENDEDORES_URL = 'https://inventario.repuestop.cl/';
 
 const PHASES = [
   { icon: <UserRound />, title: 'Registro', text: 'Crea tu cuenta de tienda fundadora.' },
@@ -82,6 +84,8 @@ export default function FounderRegistration() {
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
+  const [checkingEmail, setCheckingEmail] = useState(false);
+  const [emailTaken, setEmailTaken] = useState<string | null>(null);
 
   // Verificación de correo
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -93,6 +97,8 @@ export default function FounderRegistration() {
   const [session, setSession] = useState<Session | null>(null);
   const [phaseNotice, setPhaseNotice] = useState<string | null>(null);
   const [blocked, setBlocked] = useState<string | null>(null);
+  // true solo cuando la verificación ya fue APPROVED de verdad (no la fase 3 informativa antes de aprobar).
+  const [alreadyApproved, setAlreadyApproved] = useState(false);
 
   // Retomar postulación (correo/RUT ya registrados)
   const [showResume, setShowResume] = useState(false);
@@ -189,9 +195,29 @@ export default function FounderRegistration() {
   const update = <K extends keyof FormState>(key: K, value: FormState[K]) => {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
+    if (key === 'email') setEmailTaken(null);
   };
 
   const emailLocked = authProvider === 'GOOGLE';
+
+  /** Avisa de inmediato (sin esperar al envío del formulario) si el correo ya está registrado. */
+  async function checkEmailNow(email: string) {
+    const clean = email.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(clean)) return;
+    setCheckingEmail(true);
+    try {
+      const result = await checkEmailAvailability(clean);
+      if (result.exists) {
+        const message = result.message || 'Este correo ya está registrado.';
+        setEmailTaken(message);
+        setErrors((e) => ({ ...e, email: message }));
+      }
+    } catch {
+      /* si falla la verificación rápida, el envío del formulario igual detecta el duplicado */
+    } finally {
+      setCheckingEmail(false);
+    }
+  }
 
   /** Toma una sesión recién autenticada (login normal, por RUT o Google) y la ubica en la fase correcta. */
   async function resolveSellerSession(sellerSession: SellerSession) {
@@ -212,6 +238,7 @@ export default function FounderRegistration() {
     } else {
       setPhaseNotice(null);
     }
+    setAlreadyApproved((verification?.reviewStatus || '').toUpperCase() === 'APPROVED');
     setActivePhase(phaseForVerification(verification));
     setShowResume(false);
     setPendingEmail(null);
@@ -223,6 +250,7 @@ export default function FounderRegistration() {
     if (!form.responsibleName.trim()) e.responsibleName = 'Ingresa el nombre del responsable';
     if (!form.cargo.trim()) e.cargo = 'Ingresa el cargo';
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(form.email.trim())) e.email = 'Correo no válido';
+    else if (emailTaken) e.email = emailTaken;
     if (!/^9\d{8}$/.test(form.phone)) e.phone = 'Teléfono chileno de 9 dígitos (empieza en 9)';
     if (authProvider === 'EMAIL_PASSWORD' && form.password.length < 8) e.password = 'Mínimo 8 caracteres';
     if (!form.storeName.trim()) e.storeName = 'Ingresa el nombre de tu tienda';
@@ -277,6 +305,7 @@ export default function FounderRegistration() {
           storeName: result.storeName,
           founder: result.founder,
         });
+        setAlreadyApproved(false);
         setActivePhase(1);
       }
     } catch (err: any) {
@@ -306,6 +335,7 @@ export default function FounderRegistration() {
         founder: result.founder,
       });
       setPendingEmail(null);
+      setAlreadyApproved(false);
       setActivePhase(1);
     } catch (err: any) {
       setFormError(err?.message || 'El código no es válido o expiró.');
@@ -384,6 +414,7 @@ export default function FounderRegistration() {
                   submitting={submitting} formError={formError}
                   onSubmit={handleSubmit}
                   onOpenLegal={setLegal}
+                  onEmailBlur={checkEmailNow} checkingEmail={checkingEmail}
                 />
               )}
 
@@ -409,7 +440,7 @@ export default function FounderRegistration() {
               )}
 
               {activePhase === 3 && (
-                <ApprovedInfo onHome={() => navigate('/')} />
+                <ApprovedInfo approved={alreadyApproved} onHome={() => navigate('/')} />
               )}
             </>
           )}
@@ -523,6 +554,7 @@ type RegFormProps = {
   onRegionChange: (regionId: string) => void;
   submitting: boolean; formError: string; onSubmit: () => void;
   onOpenLegal: (doc: LegalDoc) => void;
+  onEmailBlur: (email: string) => void; checkingEmail: boolean;
 };
 
 function RegistrationForm(p: RegFormProps) {
@@ -560,9 +592,10 @@ function RegistrationForm(p: RegFormProps) {
         </Field>
 
         <Field label="Correo electrónico" required error={errors.email}
-          hint={p.emailLocked ? 'Verificado con tu cuenta de Google' : undefined}>
+          hint={p.emailLocked ? 'Verificado con tu cuenta de Google' : p.checkingEmail ? 'Verificando disponibilidad...' : undefined}>
           <input type="email" value={form.email} placeholder="ejemplo@correo.com" disabled={p.emailLocked}
-            onChange={(e) => update('email', e.target.value)} />
+            onChange={(e) => update('email', e.target.value)}
+            onBlur={(e) => { if (!p.emailLocked) p.onEmailBlur(e.target.value); }} />
         </Field>
         <Field label="Teléfono" required error={errors.phone}>
           <div className="founder-reg-phone">
@@ -1135,7 +1168,23 @@ function ReviewInfo({ storeName, onFinish }: { storeName?: string; onFinish: () 
 /* ==================================================================== *
  * Fase 4 — Aprobación (informativa)
  * ==================================================================== */
-function ApprovedInfo({ onHome }: { onHome: () => void }) {
+function ApprovedInfo({ approved, onHome }: { approved: boolean; onHome: () => void }) {
+  if (approved) {
+    return (
+      <div className="founder-reg-card founder-reg-centered">
+        <div className="founder-reg-icon-badge founder-reg-icon-approved"><Crown size={28} /></div>
+        <h2>¡Tu tienda ya está aprobada!</h2>
+        <p>
+          Tu cuenta de tienda fundadora ya fue validada por nuestro equipo. Ingresa al <strong>panel de vendedores</strong> para
+          cargar tu inventario y empezar a vender con 5% de comisión fija.
+        </p>
+        <a className="button founder-reg-submit" href={PANEL_VENDEDORES_URL}>
+          Ir al panel de vendedores <ArrowRight size={18} />
+        </a>
+        <button type="button" className="button button-outline founder-reg-submit" onClick={onHome}>Volver al inicio</button>
+      </div>
+    );
+  }
   return (
     <div className="founder-reg-card founder-reg-centered">
       <div className="founder-reg-icon-badge founder-reg-icon-approved"><Crown size={28} /></div>
