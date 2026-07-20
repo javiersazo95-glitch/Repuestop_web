@@ -10,7 +10,7 @@ import {
   fetchPaises, fetchRegiones, fetchComunas,
   uploadVerificacion, renderGoogleButton, renderGoogleResumeButton, googleEnabled,
   isPendingVerification, ApiError,
-  loginSeller, loginSellerByTaxId, lookupSellerByTaxId, fetchVerificacionStatus,
+  loginSeller, loginSellerByTaxId, loginSellerWithGoogle, lookupSellerByTaxId, fetchVerificacionStatus,
   sendSellerRecoverCode, verifySellerRecoverCode, resetSellerPassword, checkEmailAvailability,
   type UbicacionOption, type GoogleProfile, type SellerRegistrationPayload,
   type SellerSession, type SellerLookup, type VerificacionResponse,
@@ -165,10 +165,24 @@ export default function FounderRegistration() {
     return () => { alive = false; };
   }, [form.regionId]);
 
-  // Botón de Google (paso "elige método")
+  // Botón de Google (paso "elige método"): si ya existe una cuenta con ese correo, retomamos
+  // su postulación donde quedó (documentos, en revisión o ya aprobada) en vez de mostrar el
+  // formulario de registro; solo si no existe cuenta, se prellena el formulario para crear una.
   useEffect(() => {
     if (activePhase !== 0 || pendingEmail || methodChosen || !googleEnabled || !googleRef.current) return;
-    renderGoogleButton(googleRef.current, (profile) => {
+    renderGoogleButton(googleRef.current, async (profile) => {
+      setGoogleMsg('');
+      try {
+        const existingSession = await loginSellerWithGoogle(profile.idToken);
+        await resolveSellerSession(existingSession);
+        return;
+      } catch (err: any) {
+        if (!(err instanceof ApiError) || err.status !== 404) {
+          setGoogleMsg(err?.message || 'No pudimos verificar tu cuenta de Google.');
+          return;
+        }
+        // 404: no hay cuenta de RepuesTop con este correo todavía -> seguimos como registro nuevo.
+      }
       setGoogle(profile);
       setAuthProvider('GOOGLE');
       setForm((f) => ({
@@ -176,7 +190,6 @@ export default function FounderRegistration() {
         email: profile.email || f.email,
         responsibleName: f.responsibleName || profile.name || '',
       }));
-      setGoogleMsg('');
       setMethodChosen(true);
     }, (msg) => setGoogleMsg(msg));
   }, [activePhase, pendingEmail, methodChosen, googleRemountKey]);
