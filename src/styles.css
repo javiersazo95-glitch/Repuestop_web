@@ -1274,9 +1274,10 @@ p { color: var(--muted); line-height: 1.75; }
 .founder-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .founder-field-label { font-size: .8rem; font-weight: 700; color: var(--navy); }
 .founder-req { color: #de350b; font-style: normal; margin-left: 2px; }
-.founder-field input, .founder-field select, .founder-reg-code, .founder-reg-phone input, .founder-reg-password input {
+.founder-field input, .founder-field select, .founder-field textarea, .founder-reg-code, .founder-reg-phone input, .founder-reg-password input {
   width: 100%; padding: 11px 13px; border: 1px solid var(--line); border-radius: 10px; font-size: .92rem; color: var(--navy); background: #fff; transition: border-color .2s, box-shadow .2s; }
-.founder-field input:focus, .founder-field select:focus, .founder-reg-code:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,86,191,.12); }
+.founder-field textarea { resize: vertical; font-family: inherit; }
+.founder-field input:focus, .founder-field select:focus, .founder-field textarea:focus, .founder-reg-code:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(0,86,191,.12); }
 .founder-field input:disabled, .founder-field select:disabled { background: var(--soft); color: var(--muted); cursor: not-allowed; }
 .founder-field.has-error input, .founder-field.has-error select { border-color: #de350b; }
 .founder-field-error { color: #de350b; font-size: .72rem; }

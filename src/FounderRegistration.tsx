@@ -108,9 +108,23 @@ export default function FounderRegistration() {
   // Google button
   const googleRef = useRef<HTMLDivElement | null>(null);
   const [googleMsg, setGoogleMsg] = useState('');
+  // Se incrementa al volver de un back/forward (bfcache) para forzar que React
+  // remonte el contenedor del botón: el iframe de Google no sobrevive la restauración.
+  const [googleRemountKey, setGoogleRemountKey] = useState(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
+  }, []);
+
+  // Si el navegador restaura esta página desde el back/forward cache (ej. el usuario
+  // vuelve atrás tras abrir el selector de cuenta de Google), el iframe de Google
+  // queda vacío aunque el contenedor siga en el DOM. Forzamos un remount.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setGoogleRemountKey((k) => k + 1);
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
   }, []);
 
   // Deep-link desde el correo de "necesita corrección": ?rut=... abre directo el flujo de retomar postulación.
@@ -159,7 +173,7 @@ export default function FounderRegistration() {
       setGoogleMsg('');
       setMethodChosen(true);
     }, (msg) => setGoogleMsg(msg));
-  }, [activePhase, pendingEmail, methodChosen]);
+  }, [activePhase, pendingEmail, methodChosen, googleRemountKey]);
 
   function chooseManual() {
     setGoogle(null);
@@ -356,7 +370,7 @@ export default function FounderRegistration() {
           ) : (
             <>
               {activePhase === 0 && !pendingEmail && !methodChosen && (
-                <MethodChooser googleRef={googleRef} googleMsg={googleMsg} onManual={chooseManual} />
+                <MethodChooser googleRef={googleRef} googleMsg={googleMsg} onManual={chooseManual} remountKey={googleRemountKey} />
               )}
 
               {activePhase === 0 && !pendingEmail && methodChosen && (
@@ -450,8 +464,8 @@ function GoogleGIcon() {
   );
 }
 
-function MethodChooser({ googleRef, googleMsg, onManual }: {
-  googleRef: React.RefObject<HTMLDivElement>; googleMsg: string; onManual: () => void;
+function MethodChooser({ googleRef, googleMsg, onManual, remountKey }: {
+  googleRef: React.RefObject<HTMLDivElement>; googleMsg: string; onManual: () => void; remountKey: number;
 }) {
   return (
     <div className="founder-reg-card">
@@ -467,7 +481,7 @@ function MethodChooser({ googleRef, googleMsg, onManual }: {
           <p>Inicias sesión con tu cuenta de Google cada vez. Tu correo queda verificado al instante, sin contraseñas.</p>
           {googleEnabled ? (
             <>
-              <div ref={googleRef} className="founder-reg-google-btn" />
+              <div key={remountKey} ref={googleRef} className="founder-reg-google-btn" />
               {googleMsg && <p className="founder-reg-hint-error">{googleMsg}</p>}
             </>
           ) : (
@@ -715,6 +729,7 @@ function ResumeCard({ prefill, onResolved, onClose }: {
   const googleRef = useRef<HTMLDivElement | null>(null);
   const [googleBusy, setGoogleBusy] = useState(false);
   const [googleError, setGoogleError] = useState('');
+  const [googleRemountKey, setGoogleRemountKey] = useState(0);
 
   // Si llegamos con un RUT precargado (ej. desde el link del correo de corrección), busca de una vez.
   useEffect(() => {
@@ -722,6 +737,15 @@ function ResumeCard({ prefill, onResolved, onClose }: {
       handleLookup();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // El iframe de Google no sobrevive un back/forward restaurado desde bfcache; forzamos remount.
+  useEffect(() => {
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) setGoogleRemountKey((k) => k + 1);
+    };
+    window.addEventListener('pageshow', onPageShow);
+    return () => window.removeEventListener('pageshow', onPageShow);
   }, []);
 
   useEffect(() => {
@@ -737,7 +761,7 @@ function ResumeCard({ prefill, onResolved, onClose }: {
         setGoogleBusy(false);
       }
     }, setGoogleError);
-  }, [mode, lookup]);
+  }, [mode, lookup, googleRemountKey]);
 
   async function handleLookup() {
     setLookupError('');
@@ -881,7 +905,7 @@ function ResumeCard({ prefill, onResolved, onClose }: {
           {lookup?.found && lookup.authProvider === 'GOOGLE' && (
             <>
               <p className="founder-reg-hint-ok">Encontramos tu tienda · {lookup.maskedEmail} · registrada con Google</p>
-              <div ref={googleRef} className="founder-reg-google-btn" />
+              <div key={googleRemountKey} ref={googleRef} className="founder-reg-google-btn" />
               {googleBusy && <p className="founder-reg-hint-ok">Ingresando...</p>}
               {googleError && <p className="founder-reg-hint-error">{googleError}</p>}
             </>
@@ -975,15 +999,29 @@ const DOC_FIELDS: { key: DocKey; label: string; hint: string; required: boolean 
   { key: 'boletaFacturaDoc', label: 'Boleta o factura', hint: 'Ejemplo de boleta o factura de tu tienda.', required: false },
 ];
 
+const COMMENT_MAX = 100;
+
 function DocumentsUpload({ session, notice, onDone }: { session: Session; notice?: string | null; onDone: () => void }) {
   const [files, setFiles] = useState<Record<DocKey, File | null>>({
     representativeDocument: null, inicioActividadesDoc: null, patenteDoc: null, boletaFacturaDoc: null,
   });
+  const [existing, setExisting] = useState<VerificacionResponse | null>(null);
   const [website, setWebsite] = useState('');
+  const [comment, setComment] = useState('');
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  const requiredReady = DOC_FIELDS.filter((d) => d.required).every((d) => files[d.key]);
+  useEffect(() => {
+    let cancelled = false;
+    fetchVerificacionStatus(session.sellerId, session.token)
+      .then((v) => { if (!cancelled) { setExisting(v); if (v?.websiteOrSocialUrl) setWebsite(v.websiteOrSocialUrl); } })
+      .catch(() => { /* si falla, tratamos como sin documentos previos */ });
+    return () => { cancelled = true; };
+  }, [session.sellerId, session.token]);
+
+  // Un doc requerido está satisfecho si se eligió un archivo nuevo o ya existe uno guardado (ej. tras una corrección parcial).
+  const requiredReady = DOC_FIELDS.filter((d) => d.required)
+    .every((d) => files[d.key] || Boolean(existing?.[d.key]));
 
   async function submit() {
     setError('');
@@ -993,6 +1031,7 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
       await uploadVerificacion(session.sellerId, session.token, {
         ...files,
         websiteOrSocialUrl: website.trim() || undefined,
+        mensaje: comment.trim() || undefined,
       });
       onDone();
     } catch (err: any) {
@@ -1020,7 +1059,7 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
       <div className="founder-reg-docs">
         {DOC_FIELDS.map((doc) => (
           <FileField key={doc.key} label={doc.label} hint={doc.hint} required={doc.required}
-            file={files[doc.key]}
+            file={files[doc.key]} existingUrl={existing?.[doc.key] ?? null}
             onChange={(f) => setFiles((prev) => ({ ...prev, [doc.key]: f }))} />
         ))}
       </div>
@@ -1029,6 +1068,14 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
         <input value={website} placeholder="https://instagram.com/tu-tienda"
           onChange={(e) => setWebsite(e.target.value)} />
       </Field>
+
+      {notice && (
+        <Field label="Comentario para el equipo" hint={`${comment.length}/${COMMENT_MAX} · Opcional`}>
+          <textarea value={comment} rows={2} maxLength={COMMENT_MAX}
+            placeholder="Cuéntanos qué corregiste o agrega contexto para la revisión."
+            onChange={(e) => setComment(e.target.value.slice(0, COMMENT_MAX))} />
+        </Field>
+      )}
 
       {error && <div className="founder-reg-alert">{error}</div>}
 
@@ -1039,21 +1086,22 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
   );
 }
 
-function FileField({ label, hint, required, file, onChange }: {
-  label: string; hint: string; required: boolean; file: File | null; onChange: (f: File | null) => void;
+function FileField({ label, hint, required, file, existingUrl, onChange }: {
+  label: string; hint: string; required: boolean; file: File | null; existingUrl?: string | null; onChange: (f: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const hasFile = Boolean(file || existingUrl);
   return (
-    <div className={`founder-file ${file ? 'has-file' : ''}`}>
+    <div className={`founder-file ${hasFile ? 'has-file' : ''}`}>
       <input ref={inputRef} type="file" accept="image/*,application/pdf" hidden
         onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
       <button type="button" className="founder-file-drop" onClick={() => inputRef.current?.click()}>
-        <span className="founder-file-icon">{file ? <FileText size={20} /> : <UploadCloud size={20} />}</span>
+        <span className="founder-file-icon">{hasFile ? <FileText size={20} /> : <UploadCloud size={20} />}</span>
         <span className="founder-file-text">
           <strong>{label}{required && <i className="founder-req">*</i>}</strong>
-          <small>{file ? file.name : hint}</small>
+          <small>{file ? file.name : existingUrl ? 'Ya adjuntado · toca para reemplazar' : hint}</small>
         </span>
-        {file && <span className="founder-file-check"><Check size={16} /></span>}
+        {hasFile && <span className="founder-file-check"><Check size={16} /></span>}
       </button>
     </div>
   );

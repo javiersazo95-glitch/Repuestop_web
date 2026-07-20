@@ -62,6 +62,7 @@ export type VerificacionResponse = {
   inicioActividadesDoc: string | null;
   patenteDoc: string | null;
   boletaFacturaDoc: string | null;
+  websiteOrSocialUrl: string | null;
   reviewStatus: string | null;
   reviewNotes: string | null;
   submittedAt: string | null;
