@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { REGIONS, COMUNAS_BY_REGION } from './chileData';
+import { API_URL } from './config';
 import { X } from 'lucide-react';
 
 interface SupportModalProps {
@@ -48,8 +49,7 @@ export default function SupportModal({ isOpen, onClose }: SupportModalProps) {
         contexto: 'Formulario de contacto del sitio web'
       };
 
-      const apiUrl = (import.meta as any).env?.VITE_API_URL || 'http://localhost:8080/api/v1';
-      const response = await fetch(`${apiUrl}/support/tickets`, {
+      const response = await fetch(`${API_URL}/support/tickets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

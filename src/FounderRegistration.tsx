@@ -810,6 +810,7 @@ function ResumeCard({ prefill, onResolved, onClose }: {
   }, [mode, lookup, googleRemountKey]);
 
   async function handleLookup() {
+    if (looking) return;
     setLookupError('');
     setLookup(null);
     if (!/^[0-9.]+-[0-9kK]$/.test(taxId.trim())) { setLookupError('Ingresa un RUT con formato 12.345.678-9'); return; }
@@ -1047,6 +1048,22 @@ const DOC_FIELDS: { key: DocKey; label: string; hint: string; required: boolean 
 
 const COMMENT_MAX = 100;
 
+/**
+ * Sanea y valida una URL de sitio web o red social.
+ * Antepone https:// si carece de esquema y rechaza esquemas peligrosos como javascript: o data:.
+ */
+function sanitizeWebsiteUrl(rawUrl: string): string | undefined {
+  const clean = rawUrl.trim();
+  if (!clean) return undefined;
+  if (/^(javascript|data|vbscript):/i.test(clean)) {
+    return undefined;
+  }
+  if (!/^https?:\/\//i.test(clean)) {
+    return `https://${clean}`;
+  }
+  return clean;
+}
+
 function DocumentsUpload({ session, notice, onDone }: { session: Session; notice?: string | null; onDone: () => void }) {
   const [files, setFiles] = useState<Record<DocKey, File | null>>({
     representativeDocument: null, inicioActividadesDoc: null, patenteDoc: null, boletaFacturaDoc: null,
@@ -1072,11 +1089,19 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
   async function submit() {
     setError('');
     if (!requiredReady) { setError('Adjunta los documentos obligatorios para continuar.'); return; }
+    
+    // Sanear URL antes de enviar (bloquea javascript: y antepone https://)
+    const sanitizedUrl = website.trim() ? sanitizeWebsiteUrl(website) : undefined;
+    if (website.trim() && !sanitizedUrl) {
+      setError('Ingresa una URL válida (ej: https://instagram.com/tu-tienda).');
+      return;
+    }
+
     setUploading(true);
     try {
       await uploadVerificacion(session.sellerId, session.token, {
         ...files,
-        websiteOrSocialUrl: website.trim() || undefined,
+        websiteOrSocialUrl: sanitizedUrl,
         mensaje: comment.trim() || undefined,
       });
       onDone();
@@ -1132,22 +1157,50 @@ function DocumentsUpload({ session, notice, onDone }: { session: Session; notice
   );
 }
 
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB límite defensivo
+const ALLOWED_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg', '.webp'];
+
 function FileField({ label, hint, required, file, existingUrl, onChange }: {
   label: string; hint: string; required: boolean; file: File | null; existingUrl?: string | null; onChange: (f: File | null) => void;
 }) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const hasFile = Boolean(file || existingUrl);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0] ?? null;
+    setFileError(null);
+    if (!selected) {
+      onChange(null);
+      return;
+    }
+    // Validar tamaño máximo (10 MB)
+    if (selected.size > MAX_FILE_SIZE_BYTES) {
+      setFileError(`El archivo "${selected.name}" supera el límite de 10 MB.`);
+      onChange(null);
+      return;
+    }
+    // Validar extensión de archivo permitida
+    const ext = selected.name.substring(selected.name.lastIndexOf('.')).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      setFileError(`Formato no permitido para "${selected.name}". Usa PDF, PNG o JPG.`);
+      onChange(null);
+      return;
+    }
+    onChange(selected);
+  };
+
   return (
-    <div className={`founder-file ${hasFile ? 'has-file' : ''}`}>
-      <input ref={inputRef} type="file" accept="image/*,application/pdf" hidden
-        onChange={(e) => onChange(e.target.files?.[0] ?? null)} />
+    <div className={`founder-file ${hasFile ? 'has-file' : ''} ${fileError ? 'has-error' : ''}`}>
+      <input ref={inputRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" hidden
+        onChange={handleFileChange} />
       <button type="button" className="founder-file-drop" onClick={() => inputRef.current?.click()}>
         <span className="founder-file-icon">{hasFile ? <FileText size={20} /> : <UploadCloud size={20} />}</span>
         <span className="founder-file-text">
           <strong>{label}{required && <i className="founder-req">*</i>}</strong>
-          <small>{file ? file.name : existingUrl ? 'Ya adjuntado · toca para reemplazar' : hint}</small>
+          <small>{fileError ? <span className="founder-field-error">{fileError}</span> : file ? file.name : existingUrl ? 'Ya adjuntado · toca para reemplazar' : hint}</small>
         </span>
-        {hasFile && <span className="founder-file-check"><Check size={16} /></span>}
+        {hasFile && !fileError && <span className="founder-file-check"><Check size={16} /></span>}
       </button>
     </div>
   );
