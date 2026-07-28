@@ -165,17 +165,23 @@ export default function FounderRegistration() {
     return () => { alive = false; };
   }, [form.regionId]);
 
-  // Botón de Google (paso "elige método"): si ya existe una cuenta con ese correo, retomamos
-  // su postulación donde quedó (documentos, en revisión o ya aprobada) en vez de mostrar el
-  // formulario de registro; solo si no existe cuenta, se prellena el formulario para crear una.
+  // Botón de Google (paso "elige método"): si ya existe una cuenta VENDEDORA con ese correo,
+  // retomamos su postulación donde quedó (documentos, en revisión o ya aprobada) en vez de mostrar
+  // el formulario de registro; solo si no existe cuenta -o existe pero es de comprador, sin tienda-
+  // se prellena el formulario para crear una cuenta de vendedor.
   useEffect(() => {
     if (activePhase !== 0 || pendingEmail || methodChosen || !googleEnabled || !googleRef.current) return;
     renderGoogleButton(googleRef.current, async (profile) => {
       setGoogleMsg('');
       try {
         const existingSession = await loginSellerWithGoogle(profile.idToken);
-        await resolveSellerSession(existingSession);
-        return;
+        // El mismo correo puede pertenecer a una cuenta de comprador (app móvil) sin tienda
+        // asociada; el backend igual responde 200 pero sin sellerId. En ese caso no hay nada
+        // que retomar y debemos seguir como registro nuevo, igual que en el caso 404.
+        if (existingSession.sellerId) {
+          await resolveSellerSession(existingSession);
+          return;
+        }
       } catch (err: any) {
         if (!(err instanceof ApiError) || err.status !== 404) {
           setGoogleMsg(err?.message || 'No pudimos verificar tu cuenta de Google.');
