@@ -86,6 +86,8 @@ export default function FounderRegistration() {
   const [formError, setFormError] = useState('');
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailTaken, setEmailTaken] = useState<string | null>(null);
+  const [checkingTaxId, setCheckingTaxId] = useState(false);
+  const [taxIdTaken, setTaxIdTaken] = useState<string | null>(null);
 
   // Verificación de correo
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -218,6 +220,7 @@ export default function FounderRegistration() {
     setForm((f) => ({ ...f, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
     if (key === 'email') setEmailTaken(null);
+    if (key === 'taxId') setTaxIdTaken(null);
   };
 
   const emailLocked = authProvider === 'GOOGLE';
@@ -238,6 +241,25 @@ export default function FounderRegistration() {
       /* si falla la verificación rápida, el envío del formulario igual detecta el duplicado */
     } finally {
       setCheckingEmail(false);
+    }
+  }
+
+  /** Avisa de inmediato si ya existe una tienda con ese RUT, para no duplicar tiendas por RUT. */
+  async function checkTaxIdNow(taxId: string) {
+    const clean = taxId.trim();
+    if (!/^[0-9.]+-[0-9kK]$/.test(clean)) return;
+    setCheckingTaxId(true);
+    try {
+      const result = await lookupSellerByTaxId(clean);
+      if (result.found) {
+        const message = 'Este RUT ya está registrado en RepuesTop.';
+        setTaxIdTaken(message);
+        setErrors((e) => ({ ...e, taxId: message }));
+      }
+    } catch {
+      /* si falla la verificación rápida, el envío del formulario igual detecta el duplicado */
+    } finally {
+      setCheckingTaxId(false);
     }
   }
 
@@ -277,6 +299,7 @@ export default function FounderRegistration() {
     if (authProvider === 'EMAIL_PASSWORD' && form.password.length < 8) e.password = 'Mínimo 8 caracteres';
     if (!form.storeName.trim()) e.storeName = 'Ingresa el nombre de tu tienda';
     if (!/^[0-9.]+-[0-9kK]$/.test(form.taxId.trim())) e.taxId = 'RUT con formato 12.345.678-9';
+    else if (taxIdTaken) e.taxId = taxIdTaken;
     if (!form.giro) e.giro = 'Selecciona un giro';
     if (form.giro === 'other' && !form.giroOtro.trim()) e.giroOtro = 'Especifica el giro';
     if (!form.regionId) e.regionId = 'Selecciona una región';
@@ -437,6 +460,7 @@ export default function FounderRegistration() {
                   onSubmit={handleSubmit}
                   onOpenLegal={setLegal}
                   onEmailBlur={checkEmailNow} checkingEmail={checkingEmail}
+                  onTaxIdBlur={checkTaxIdNow} checkingTaxId={checkingTaxId}
                 />
               )}
 
@@ -577,6 +601,7 @@ type RegFormProps = {
   submitting: boolean; formError: string; onSubmit: () => void;
   onOpenLegal: (doc: LegalDoc) => void;
   onEmailBlur: (email: string) => void; checkingEmail: boolean;
+  onTaxIdBlur: (taxId: string) => void; checkingTaxId: boolean;
 };
 
 function RegistrationForm(p: RegFormProps) {
@@ -650,9 +675,11 @@ function RegistrationForm(p: RegFormProps) {
           <input value={form.storeName} placeholder="Nombre de tu tienda o negocio"
             onChange={(e) => update('storeName', e.target.value)} />
         </Field>
-        <Field label="RUT de la empresa" required error={errors.taxId}>
+        <Field label="RUT de la empresa" required error={errors.taxId}
+          hint={p.checkingTaxId ? 'Verificando disponibilidad...' : undefined}>
           <input value={form.taxId} placeholder="12.345.678-9" inputMode="text" maxLength={12}
-            onChange={(e) => update('taxId', formatRut(e.target.value))} />
+            onChange={(e) => update('taxId', formatRut(e.target.value))}
+            onBlur={(e) => p.onTaxIdBlur(e.target.value)} />
         </Field>
 
         <Field label="Giro comercial" required error={errors.giro} className="founder-reg-col-full">
